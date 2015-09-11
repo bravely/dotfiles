@@ -1,4 +1,49 @@
-syntax on
+set nocompatible                        " be iMproved, required
+filetype off                            " required
 
-" Wrap gitcommit file types at the appropriate length
-filetype indent plugin on
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+" let Vundle manage Vundle, required
+Plugin 'VundleVim/Vundle.vim'
+Plugin 'tpope/vim-fugitive'
+Plugin 'altercation/vim-colors-solarized'
+Plugin 'tpope/vim-commentary'
+Plugin 'bling/vim-airline'
+Plugin 'elzr/vim-json'
+Plugin 'scrooloose/nerdtree'
+Plugin 'jistr/vim-nerdtree-tabs'
+Plugin 'mustache/vim-mustache-handlebars'
+Plugin 'jiangmiao/auto-pairs'
+Plugin 'kien/ctrlp.vim'
+Plugin 'tpope/vim-surround'
+
+" All of your Plugins must be added before the following line
+call vundle#end()            " required
+filetype plugin indent on    " required
+
+"""""""""""""""""""" Begin old
+
+syntax on
+set background=dark
+colorscheme solarized
+" colorscheme sea
+set number
+set expandtab
+set shiftwidth=2
+set softtabstop=2
+nnoremap <C-Left> :tabprevious<CR>
+nnoremap <C-Right> :tabnext<CR>
+nnoremap <silent> <A-Left> :execute 'silent! tabmove ' . (tabpagenr()-2)<CR>
+nnoremap <silent> <A-Right> :execute 'silent! tabmove ' . tabpagenr()<CR>
+
+"""""""""""""""""""""""
+" airline
+"""""""""""""""""""""""
+set laststatus=2
+let g:airline_powerline_fonts = 1
+let g:airline_theme='solarized'
+
+let g:solarized_visibility = "high"
+let g:solarized_contrast = "high"

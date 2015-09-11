@@ -1,36 +1,37 @@
 "*":
   editor:
     showIndentGuide: true
-    fontFamily: "Menlo"
+    preferredLineLength: 79
     invisibles: {}
-    fontSize: 15
-    softWrapAtPreferredLineLength: true
+    fontSize: 12
   core:
-    ignoredNames: [
-      ".bundle"
-      ".git"
-      "log"
-      "repositories"
-      "tmp"
-      "vendor"
-    ]
     themes: [
-      "unity-ui"
-      "glacier-syntax"
+      "atom-material-ui"
+      "atom-material-syntax"
     ]
-    hideGitIgnoredFiles: true
-    disabledPackages: [
-      "background-tips"
-      "exception-reporting"
-      "metrics"
-    ]
-  "spell-check":
-    grammars: [
-      "text.plain"
-      "source.gfm"
-      "text.git-commit"
-    ]
+    useReactEditor: true
+  "exception-reporting":
+    userId: "0ca00a25-fadc-a1be-55de-d2b05c0a8306"
+  "release-notes":
+    viewedVersion: "0.96.0"
   welcome:
     showOnStartup: false
-  "release-notes":
-    viewedVersion: "0.89.0"
+  metrics:
+    userId: "680d8e4e90b7ca42bf07cb68220a8e68fffad53c"
+  jshint:
+    validateOnlyOnSave: true
+  "vim-mode":
+    useSmartcaseForSearch: true
+    useClipboardAsDefaultRegister: true
+  "atom-material-ui":
+    depth: true
+    rippleAccentColor: true
+    panelContrast: true
+    accentColor: "Pink"
+  minimap: {}
+  "linter-rubocop":
+    executablePath: "/Users/quaunaut/.rbenv/shims/rubocop"
+    additionalArguments: "--rails"
+  "fuzzy-finder": {}
+  "save-session":
+    dataSaveFolder: "/Users/quaunaut/.atom/packages/save-session/projects"

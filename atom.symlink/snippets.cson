@@ -1,0 +1,30 @@
+# Your snippets
+#
+# Atom snippets allow you to enter a simple prefix in the editor and hit tab to
+# expand the prefix into a larger code block with templated values.
+#
+# You can create a new snippet in this file by typing "snip" and then hitting
+# tab.
+#
+# An example CoffeeScript snippet to expand log to console.log:
+#
+# '.source.coffee':
+#   'Console log':
+#     'prefix': 'log'
+#     'body': 'console.log $1'
+#
+
+'.source.ruby':
+  'describe rubo':
+    'prefix': 'describe rubo'
+    'body': """
+      describe '$1' do
+        $2
+      end$3
+    """
+
+  'is_expected have_db_column':
+    'prefix': 'is_expected have_db_column'
+    'body': """
+      it { is_expected.to have_db_column($1).of_type($2) }
+    """
