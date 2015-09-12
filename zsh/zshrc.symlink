@@ -54,7 +54,7 @@ source $ZSH/oh-my-zsh.sh
 unsetopt nomatch
 
 # Add dem bins to path lul
-export PATH="/usr/local/bin:$PATH"
+# export PATH="/usr/local/bin:$PATH"
 
 # added by travis gem
 source /Users/quaunaut/.travis/travis.sh
@@ -63,10 +63,10 @@ source /Users/quaunaut/.travis/travis.sh
 export EDITOR="atom -n -w"
 
 # [[ -s $HOME/.nvm/nvm.sh ]] && . $HOME/.nvm/nvm.sh # This loads NVM
-[[ -s "$HOME/.nvm" ]] && . "$HOME/.nvm/nvm.sh"
+# [[ -s "$HOME/.nvm" ]] && . "$HOME/.nvm/nvm.sh"
 
 # PyEnv: For when you wish you were rbenv
-eval "$(pyenv init -)"
+# eval "$(pyenv init -)"
 
 # rbenv
 # export PATH="$HOME/.rbenv/bin:$PATH"
@@ -77,3 +77,47 @@ export TERM="screen-256color"
 
 # Make hub alias git commands
 eval "$(hub alias -s)"
+
+
+#####################
+# This begins the holman zshrc file.
+#####################
+
+# shortcut to this dotfiles path is $ZSH
+export ZSH=$HOME/.dotfiles
+
+# Stash your environment variables in ~/.localrc. This means they'll stay out
+# of your main dotfiles repository(which may be public, like this one), but
+# you'll have access to them in your scripts.
+if [[ -a ~/.localrc ]]
+then
+  source ~/.localrc
+fi
+
+# all of our zsh files
+typeset -U config_files
+config_files=($ZSH/**/*.zsh)
+
+# load the path files
+for file in ${(M)config_files:#*/path.zsh}
+do
+  source $file
+done
+
+# load everything but the path and completion files
+for file in ${${config_files:#*/path.zsh}:#*/completion.zsh}
+do
+  source $file
+done
+
+# initialize autocomplete here, otherwise functions won't be loaded
+autoload -U compinit
+compinit
+
+# load every completion after autocomplete loads
+for file in ${(M)config_files:#*/completion.zsh}
+do
+  source $file
+done
+
+unset config_files

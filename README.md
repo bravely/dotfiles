@@ -1,4 +1,9 @@
-# holman does dotfiles
+# mays does dotfiles
+
+
+## Most of this readme is unchanged from Zach Holman's.
+However, one thing is of note: Have zsh installed first, then
+install oh-my-zsh. It'll save a lot of headaches.
 
 ## dotfiles
 
