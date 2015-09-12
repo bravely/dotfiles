@@ -47,27 +47,33 @@ DEFAULT_USER="quaunaut"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 plugins=(bower brew bundler common-aliases docker gem git hub npm rails vagrant)
 
+# Take a guess
 source $ZSH/oh-my-zsh.sh
 
 # Allow [ or ] whereever you want.
 unsetopt nomatch
 
+# Add dem bins to path lul
 export PATH="/usr/local/bin:$PATH"
 
 # added by travis gem
 source /Users/quaunaut/.travis/travis.sh
 
-export EDITOR="subl -n -w"
+# Use Atom.io as default editor
+export EDITOR="atom -n -w"
 
 # [[ -s $HOME/.nvm/nvm.sh ]] && . $HOME/.nvm/nvm.sh # This loads NVM
 [[ -s "$HOME/.nvm" ]] && . "$HOME/.nvm/nvm.sh"
 
+# PyEnv: For when you wish you were rbenv
 eval "$(pyenv init -)"
 
 # rbenv
-export PATH="$HOME/.rbenv/bin:$PATH"
-eval "$(rbenv init -)"
+# export PATH="$HOME/.rbenv/bin:$PATH"
+# eval "$(rbenv init -)"
 
+# All colors for terminal
 export TERM="screen-256color"
 
+# Make hub alias git commands
 eval "$(hub alias -s)"
