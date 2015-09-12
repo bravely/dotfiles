@@ -121,3 +121,8 @@ do
 done
 
 unset config_files
+
+# Doing this here instead of in node, as nvm's pretty fragile- without
+# this, PATH doesn't get set properly. Bah to NVM, bah.
+export NVM_DIR=~/.nvm
+source $(brew --prefix nvm)/nvm.sh
