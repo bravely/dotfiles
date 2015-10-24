@@ -126,3 +126,5 @@ unset config_files
 # this, PATH doesn't get set properly. Bah to NVM, bah.
 export NVM_DIR=~/.nvm
 source $(brew --prefix nvm)/nvm.sh
+
+export GIT_EDITOR=vim

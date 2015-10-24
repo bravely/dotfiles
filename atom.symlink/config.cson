@@ -28,6 +28,8 @@
     rippleAccentColor: true
     panelContrast: true
     accentColor: "Pink"
+    compactTreeView: true
+    showTabIcons: "Show on all tabs"
   minimap: {}
   "linter-rubocop":
     executablePath: "/Users/quaunaut/.rbenv/shims/rubocop"
