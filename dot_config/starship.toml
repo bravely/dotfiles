@@ -1,0 +1,9 @@
+format = "$all$architecture"
+
+[gcloud]
+disabled = true
+
+[custom.architecture]
+command = "echo 'x86_64'"
+when = "test \"$(uname -a | grep x86_64)\""
+description = "Shows the architecture of the system"
