@@ -140,3 +140,11 @@ if [ $(arch) = "i386" ]; then
     alias pyenv86="arch -x86_64 pyenv"
 fi
 # ohoho chezmoi
+
+# pnpm
+export PNPM_HOME="/Users/bravely/Library/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+# pnpm end
+
+# 1Password SSH Keys(https://developer.1password.com/docs/ssh/get-started/#step-4-configure-your-ssh-or-git-client)
+export SSH_AUTH_SOCK=~/.1password/agent.sock
