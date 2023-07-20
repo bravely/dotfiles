@@ -89,17 +89,6 @@ source $ZSH/oh-my-zsh.sh
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
-export EDITOR="code --wait"
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
@@ -108,6 +97,19 @@ export EDITOR="code --wait"
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+alias codei="code-insiders"
+alias code="code-insiders"
+
+# Preferred editor for local and remote sessions
+# if [[ -n $SSH_CONNECTION ]]; then
+#   export EDITOR='vim'
+# else
+#   export EDITOR='mvim'
+# fi
+export EDITOR="code-insiders --wait"
+
+# Compilation flags
+# export ARCHFLAGS="-arch x86_64"
 
 # asdf
 . /opt/homebrew/opt/asdf/libexec/asdf.sh
@@ -115,9 +117,10 @@ export EDITOR="code --wait"
 # starship
 eval "$(starship init zsh)"
 
+# iterm2
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-
+# TODO: Make this work for any given user
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/bravely/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/bravely/google-cloud-sdk/path.zsh.inc'; fi
 
@@ -129,18 +132,6 @@ if [ -f '/Users/bravely/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/b
 export TILLER_NAMESPACE=helm
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
-# Didn't finish
-    # echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /Users/bravely/.zprofile
-    # echo 'eval "$(/usr/local/bin/brew shellenv)"' >> /Users/bravely/.zprofile
-    # eval "$(/usr/local/bin/brew shellenv)"
-alias brow='/usr/local/bin/brew'
-# rosetta terminal setup
-if [ $(arch) = "i386" ]; then
-    alias brew86="/usr/local/bin/brew"
-    alias pyenv86="arch -x86_64 pyenv"
-fi
-# ohoho chezmoi
-
 # pnpm
 export PNPM_HOME="/Users/bravely/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
@@ -148,3 +139,4 @@ export PATH="$PNPM_HOME:$PATH"
 
 # 1Password SSH Keys(https://developer.1password.com/docs/ssh/get-started/#step-4-configure-your-ssh-or-git-client)
 export SSH_AUTH_SOCK=~/.1password/agent.sock
+# export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
