@@ -16,6 +16,7 @@ brew "pnpm", link: false
 brew "pyenv"
 brew "ripgrep"
 brew "tig"
+brew "tldr"
 brew "yarn"
 brew "zsh"
 cask "1password-cli"
