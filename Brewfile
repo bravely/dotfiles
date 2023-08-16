@@ -10,7 +10,10 @@ brew "chezmoi"
 brew "curl"
 brew "difftastic"
 brew "exa"
+brew "gawk"
 brew "git"
+brew "gnupg"
+brew "mas"
 brew "pnpm", link: false
 brew "pyenv"
 brew "ripgrep"
@@ -36,4 +39,4 @@ cask "spotify"
 cask "todoist"
 cask "visual-studio-code-insiders"
 cask "warp"
-
+mas "Magnet", id: 441258766
