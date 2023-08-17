@@ -1,0 +1,30 @@
+#compdef atlas
+
+_atlas_commands() {
+  local _commands _res
+  _commands=$(ATLAS_SKIP_UPDATE=true atlas plugin installed --completion 2>&1)
+
+  set -A _res ${(f)_commands} # Fiddling with array types
+  _describe 'command' _res
+}
+
+_atlas() {
+  _arguments \
+    '1: :_atlas_commands' \
+    '*:: :->command_args'
+
+  case "$state" in
+    command_args)
+      local _matches=($(ATLAS_SKIP_UPDATE=true atlas ${words[1]} --completion-bash "${(@)words[2,$CURRENT]}"))
+      if [ ${#_matches[@]} -eq 0 ]; then
+        _files
+      else
+        _describe 'command' _matches
+      fi
+      ;;
+  esac
+}
+if [[ "$(basename -- ${(%):-%x})" != "_atlas" ]]; then
+  compdef _atlas atlas
+fi
+
