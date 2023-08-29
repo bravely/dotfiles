@@ -1,0 +1,42 @@
+[core]
+	excludesfile = /Users/jdemarestmays/.gitignore
+	pager = less -FRX
+[user]
+	email = {{ .email | quote }}
+	name = Jake Demarest-Mays
+	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFO9fZ9+ST3WSFxlfTaIr1MIDLxT3OQFmsnd/Lw0zWBh
+[url "ssh://git@stash.atlassian.com:7997/"]
+	insteadOf = https://stash.atlassian.com/scm/
+[url "git@bitbucket.org:"]
+	insteadOf = https://bitbucket.org/
+[url "git@github.com:"]
+	insteadOf = https://github.com/
+[alias]
+	co = checkout
+	br = branch
+	ci = commit
+	st = status
+	unstage = reset HEAD --
+	undo-commit = reset HEAD~
+	amend = commit -a --amend -c ORIG_HEAD
+	push-new = push -u origin HEAD
+	list-aliases = config --get-regexp alias
+	del-merged = "!git branch --merged | egrep -v \"(^\\*|master|main)\" | xargs -r git branch -d"
+	push-after-rebase = push --force-with-lease
+	re-co = rebase --continue
+	re-ab = rebase --abort
+[pager]
+	branch = false
+[pull]
+	# ff = only
+	rebase = false
+[init]
+	defaultBranch = main
+[push]
+	autoSetupRemote = true
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+[commit]
+	gpgsign = true
