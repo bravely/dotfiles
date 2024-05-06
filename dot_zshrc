@@ -5,6 +5,9 @@ export PATH="/opt/homebrew/bin:$PATH"
 export PATH=$HOME/bin:$PATH
 export PATH=$HOME/.local/bin:$PATH
 
+# https://github.com/smashedtoatoms/asdf-postgres?tab=readme-ov-file#mac
+export HOMEBREW_PREFIX="/opt/homebrew"
+
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
@@ -149,3 +152,10 @@ export SSH_AUTH_SOCK=~/.1password/agent.sock
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# https://github.com/halcyon/asdf-java JAVA_HOME
+. ~/.asdf/plugins/java/set-java-home.zsh
+
+# jenv
+export PATH="$HOME/.jenv/bin:$PATH"
+eval "$(jenv init -)"
