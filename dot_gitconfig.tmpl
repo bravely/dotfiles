@@ -26,6 +26,11 @@
 	re-co = rebase --continue
 	re-ab = rebase --abort
 	par = push --force-with-lease
+	next = stack next
+	prev = stack previous
+	reword = stack reword
+	sync = stack sync
+	run = stack run
 [pager]
 	branch = false
 [pull]
@@ -44,3 +49,5 @@
 [rebase]
 	# https://andrewlock.net/working-with-stacked-branches-in-git-is-easier-with-update-refs/#:~:text=This%20approach%2C%20where%20you%20have,top%20of%20the%20previous%20one.
 	updateRefs = true
+[rerere]
+	enabled = true
