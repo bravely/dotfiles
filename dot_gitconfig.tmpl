@@ -22,6 +22,7 @@
 	push-new = push -u origin HEAD
 	list-aliases = config --get-regexp alias
 	del-merged = "!git branch --merged | egrep -v \"(^\\*|master|main)\" | xargs -r git branch -d"
+	fetch-main = fetch origin main:main
 	push-after-rebase = push --force-with-lease
 	re-co = rebase --continue
 	re-ab = rebase --abort
@@ -51,3 +52,6 @@
 	updateRefs = true
 [rerere]
 	enabled = true
+[stack]
+	protected-branch = main
+	protected-branch = master
