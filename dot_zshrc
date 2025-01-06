@@ -155,9 +155,4 @@ export SSH_AUTH_SOCK=~/.1password/agent.sock
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# https://github.com/halcyon/asdf-java JAVA_HOME
-. ~/.asdf/plugins/java/set-java-home.zsh
-
-# jenv
-export PATH="$HOME/.jenv/bin:$PATH"
-eval "$(jenv init -)"
+eval "$(atuin init zsh)"

@@ -18,7 +18,6 @@
 	st = status
 	unstage = reset HEAD --
 	undo-commit = reset HEAD~
-	amend = commit -a --amend -c ORIG_HEAD
 	push-new = push -u origin HEAD
 	list-aliases = config --get-regexp alias
 	del-merged = "!git branch --merged | egrep -v \"(^\\*|master|main)\" | xargs -r git branch -d"
@@ -32,6 +31,8 @@
 	reword = stack reword
 	sync = stack sync
 	run = stack run
+	amend = stack amend
+	fixup = --commit --fixup=HEAD
 [pager]
 	branch = false
 [pull]
