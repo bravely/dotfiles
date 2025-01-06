@@ -85,6 +85,7 @@ plugins=(
   git
   vi-mode
   zsh-autosuggestions
+  git-branchless
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -106,6 +107,7 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 alias codei="code-insiders"
 alias code="code-insiders"
+alias git='git-branchless wrap --'
 
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
