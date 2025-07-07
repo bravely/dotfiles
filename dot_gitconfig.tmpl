@@ -1,6 +1,9 @@
 [core]
 	excludesfile = /Users/jdemarestmays/.gitignore
-	pager = less -FRX
+	# pager = less -FRX
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
 [user]
 	email = {{ .email | quote }}
 	name = Jake Demarest-Mays
@@ -12,7 +15,9 @@
 [url "git@github.com:"]
 	insteadOf = https://github.com/
 [alias]
-	co = checkout
+	# Used to be checkout, but switch won't autocomplete remote with config set
+	sw = switch
+	co = switch
 	br = branch
 	ci = commit
 	st = status
@@ -32,7 +37,9 @@
 	sync = stack sync
 	run = stack run
 	amend = stack amend
-	fixup = --commit --fixup=HEAD
+	fixup = commit --fixup=HEAD
+	repair = stack --repair
+	tmp = commit -m 'tmp' --no-verify
 [pager]
 	branch = false
 [pull]
@@ -56,3 +63,14 @@
 [stack]
 	protected-branch = main
 	protected-branch = master
+[trace2]
+	eventTarget = af_unix:{{ .chezmoi.homeDir }}/.gittrace/trace.sock
+	eventBrief = true
+	eventNesting = 1
+	configparams = custom.metacommands
+[merge]
+	conflictstyle = zdiff3
+[delta]
+	navigate = true
+	line-numbers = true
+	side-by-side = true
