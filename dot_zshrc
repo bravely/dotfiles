@@ -130,6 +130,10 @@ alias du='dua'
 alias find='fd'
 alias git='git-branchless wrap --'
 alias ls='eza --icons --group-directories-first'
+{{- if hasSuffix "WSL2" .chezmoi.kernel.osrelease }}
+alias ssh='ssh.exe'
+alias ssh-add='ssh-add.exe'
+{{ end }}
 
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
