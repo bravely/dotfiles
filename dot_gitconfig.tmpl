@@ -2,6 +2,9 @@
 	excludesfile = /Users/jdemarestmays/.gitignore
 	# pager = less -FRX
 	pager = delta
+{{- if hasSuffix "WSL2" .chezmoi.kernel.osrelease }}
+  sshCommand = ssh.exe
+{{- end }}
 [interactive]
 	diffFilter = delta --color-only
 [user]
@@ -52,7 +55,11 @@
 [gpg]
 	format = ssh
 [gpg "ssh"]
+{{- if hasSuffix "WSL2" .chezmoi.kernel.osrelease }}
+  program = "/mnt/c/Users/Jake/AppData/Local/1Password/app/8/op-ssh-sign-wsl"
+{{- else }}
 	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+{{- end }}
 [commit]
 	gpgsign = true
 [rebase]
