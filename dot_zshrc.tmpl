@@ -1,3 +1,4 @@
+{{- if hasSuffix "WSL2" .chezmoi.kernel.osrelease }}eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"{{- end }}
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/.cargo/bin:$PATH
 export PATH="/opt/homebrew/opt/postgresql@10/bin:$PATH"
@@ -10,14 +11,14 @@ export PATH=$HOME/.local/bin:$PATH
 # mise version: https://github.com/mise-plugins/mise-postgres
 export HOMEBREW_PREFIX="/opt/homebrew"
 export PKG_CONFIG_PATH="/opt/homebrew/bin/pkg-config:$(brew --prefix icu4c)/lib/pkgconfig:$(brew --prefix curl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig"
-{{ if .chezmoi.os == "darwin" }}
+{{- if eq .chezmoi.os "darwin" }}
 MACOS_VERSION=$(sw_vers -productVersion)
 if [[ $MACOS_VERSION == 16.* ]]; then
   echo 'Should be able to remove the MACOSX_DEPLOYMENT_TARGET env var in ~/.zshrc: https://github.com/theory/pgenv/issues/93'
 elif [[ $MACOS_VERSION != 15.* ]]; then
   echo 'Check to see if you can remove MACOSX_DEPLOYMENT_TARGET env var in ~/.zshrc: https://github.com/theory/pgenv/issues/93'
 fi
-{{ end }}
+{{- end }}
 export PSQL_PAGER="pspg"
 
 # Path to your oh-my-zsh installation.
@@ -96,7 +97,6 @@ VI_MODE_SET_CURSOR=true
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
   git
-  git-branchless
   mise
   npm
   vi-mode
@@ -133,7 +133,8 @@ alias ls='eza --icons --group-directories-first'
 {{- if hasSuffix "WSL2" .chezmoi.kernel.osrelease }}
 alias ssh='ssh.exe'
 alias ssh-add='ssh-add.exe'
-{{ end }}
+alias open='explorer.exe'
+{{- end }}
 
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
@@ -162,10 +163,13 @@ if [ -f '/Users/bravely/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/bravely
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/bravely/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/bravely/google-cloud-sdk/completion.zsh.inc'; fi
 
-
 # Helm/Kubernetes
 export TILLER_NAMESPACE=helm
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+
+# Rust
+# This lets Cargo use the `git` CLI instead of its built-in implementation, which sometimes messes up w/ SSH Agent sockets
+export CARGO_NET_GIT_FETCH_WITH_CLI=true
 
 # pnpm
 export PNPM_HOME="/Users/bravely/Library/pnpm"
