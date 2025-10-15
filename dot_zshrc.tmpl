@@ -1,4 +1,6 @@
-{{- if hasSuffix "WSL2" .chezmoi.kernel.osrelease }}eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"{{- end }}
+{{- if hasSuffix "WSL2" (get .chezmoi.kernel "osrelease") -}}
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+{{- end -}}
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/.cargo/bin:$PATH
 export PATH="/opt/homebrew/opt/postgresql@10/bin:$PATH"
@@ -130,7 +132,7 @@ alias du='dua'
 alias find='fd'
 alias git='git-branchless wrap --'
 alias ls='eza --icons --group-directories-first'
-{{- if hasSuffix "WSL2" .chezmoi.kernel.osrelease }}
+{{- if hasSuffix "WSL2" (get .chezmoi.kernel "osrelease") }}
 alias ssh='ssh.exe'
 alias ssh-add='ssh-add.exe'
 alias open='explorer.exe'
@@ -158,10 +160,10 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 
 # TODO: Make this work for any given user
 # The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/bravely/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/bravely/google-cloud-sdk/path.zsh.inc'; fi
+if [ -f '/Users/{{- .chezmoi.username -}}/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/{{- .chezmoi.username }}/google-cloud-sdk/path.zsh.inc'; fi
 
 # The next line enables shell command completion for gcloud.
-if [ -f '/Users/bravely/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/bravely/google-cloud-sdk/completion.zsh.inc'; fi
+if [ -f '/Users/{{- .chezmoi.username }}/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/{{- .chezmoi.username -}}/google-cloud-sdk/completion.zsh.inc'; fi
 
 # Helm/Kubernetes
 export TILLER_NAMESPACE=helm
@@ -172,7 +174,7 @@ export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 export CARGO_NET_GIT_FETCH_WITH_CLI=true
 
 # pnpm
-export PNPM_HOME="/Users/bravely/Library/pnpm"
+export PNPM_HOME="/Users/{{ .chezmoi.username }}/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 # pnpm end
 
@@ -181,7 +183,7 @@ export SSH_AUTH_SOCK=~/.1password/agent.sock
 # export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
 
 # bun completions
-[ -s "/Users/jdemarestmays/.bun/_bun" ] && source "/Users/jdemarestmays/.bun/_bun"
+[ -s "/Users/{{- .chezmoi.username -}}/.bun/_bun" ] && source "/Users/{{- .chezmoi.username -}}/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"

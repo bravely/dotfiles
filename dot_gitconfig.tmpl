@@ -2,7 +2,7 @@
 	excludesfile = /Users/jdemarestmays/.gitignore
 	# pager = less -FRX
 	pager = delta
-{{- if hasSuffix "WSL2" .chezmoi.kernel.osrelease }}
+{{- if hasSuffix "WSL2" (get .chezmoi.kernel "osrelease") }}
   sshCommand = ssh.exe
 {{- end }}
 [interactive]
@@ -55,7 +55,7 @@
 [gpg]
 	format = ssh
 [gpg "ssh"]
-{{- if hasSuffix "WSL2" .chezmoi.kernel.osrelease }}
+{{- if hasSuffix "WSL2" (get .chezmoi.kernel "osrelease") }}
   program = "/mnt/c/Users/Jake/AppData/Local/1Password/app/8/op-ssh-sign-wsl"
 {{- else }}
 	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
@@ -65,6 +65,7 @@
 [rebase]
 	# https://andrewlock.net/working-with-stacked-branches-in-git-is-easier-with-update-refs/#:~:text=This%20approach%2C%20where%20you%20have,top%20of%20the%20previous%20one.
 	updateRefs = true
+	autoStash = true
 [rerere]
 	enabled = true
 [stack]
