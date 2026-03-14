@@ -13,26 +13,6 @@ export PATH=$HOME/.local/bin:$PATH
 # mise version: https://github.com/mise-plugins/mise-postgres
 export HOMEBREW_PREFIX="/opt/homebrew"
 export PKG_CONFIG_PATH="/opt/homebrew/bin/pkg-config:$(brew --prefix icu4c)/lib/pkgconfig:$(brew --prefix curl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig"
-<<<<<<< Updated upstream:dot_zshrc.tmpl
-{{- if eq .chezmoi.os "darwin" }}
-MACOS_VERSION=$(sw_vers -productVersion)
-if [[ $MACOS_VERSION == 16.* ]]; then
-  echo 'Should be able to remove the MACOSX_DEPLOYMENT_TARGET env var in ~/.zshrc: https://github.com/theory/pgenv/issues/93'
-elif [[ $MACOS_VERSION != 15.* ]]; then
-  echo 'Check to see if you can remove MACOSX_DEPLOYMENT_TARGET env var in ~/.zshrc: https://github.com/theory/pgenv/issues/93'
-fi
-{{- end }}
-||||||| Stash base:dot_zshrc
-{{ if .chezmoi.os == "darwin" }}
-MACOS_VERSION=$(sw_vers -productVersion)
-if [[ $MACOS_VERSION == 16.* ]]; then
-  echo 'Should be able to remove the MACOSX_DEPLOYMENT_TARGET env var in ~/.zshrc: https://github.com/theory/pgenv/issues/93'
-elif [[ $MACOS_VERSION != 15.* ]]; then
-  echo 'Check to see if you can remove MACOSX_DEPLOYMENT_TARGET env var in ~/.zshrc: https://github.com/theory/pgenv/issues/93'
-fi
-{{ end }}
-=======
->>>>>>> Stashed changes:dot_zshrc
 export PSQL_PAGER="pspg"
 
 # Path to your oh-my-zsh installation.
