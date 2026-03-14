@@ -1,5 +1,5 @@
 [core]
-	excludesfile = /Users/jdemarestmays/.gitignore
+	excludesfile = /Users/bravely/.gitignore
 	# pager = less -FRX
 	pager = delta
 {{- if hasSuffix "WSL2" (get .chezmoi.kernel "osrelease") }}
@@ -11,10 +11,6 @@
 	email = {{ .email | quote }}
 	name = Jake Demarest-Mays
 	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFO9fZ9+ST3WSFxlfTaIr1MIDLxT3OQFmsnd/Lw0zWBh
-[url "ssh://git@stash.atlassian.com:7997/"]
-	insteadOf = https://stash.atlassian.com/scm/
-[url "git@bitbucket.org:"]
-	insteadOf = https://bitbucket.org/
 [url "git@github.com:"]
 	insteadOf = https://github.com/
 [alias]
