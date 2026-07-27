@@ -98,6 +98,24 @@ plugins=(
   zsh-autosuggestions
 )
 
+# Third-party completion directories.
+#
+# compinit is zsh's completion initializer. It walks $fpath once, finds every
+# `_command` file in it, and registers each as an autoloadable completion
+# function (caching the result in ~/.zcompdump). The catch: that walk happens
+# at the moment compinit runs. Anything appended to $fpath afterwards is never
+# scanned, so the completions silently don't exist — which is why installers
+# that tack `fpath+=(...)` onto the end of ~/.zshrc have no effect.
+#
+# oh-my-zsh calls compinit for us when it's sourced below, so any directory we
+# want completions from has to be in $fpath *before* that line.
+fpath=(
+  $HOME/.docker/completions               # Docker Desktop
+  $HOME/.local/share/zsh/site-functions   # zshellcheck (nonexistent dirs are ignored)
+  $fpath
+)
+
+# Sources oh-my-zsh, which runs compinit against the $fpath set above.
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
@@ -150,12 +168,13 @@ eval "$(starship init zsh)"
 # iterm2
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-# TODO: Make this work for any given user
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/{{- .chezmoi.username -}}/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/{{- .chezmoi.username }}/google-cloud-sdk/path.zsh.inc'; fi
+# Google Cloud SDK. The SDK currently lives under ~/Downloads — if you ever
+# relocate it, update both paths below. Both files are guarded, so a missing
+# SDK is a silent no-op rather than an error.
+if [ -f "$HOME/Downloads/google-cloud-sdk/path.zsh.inc" ]; then . "$HOME/Downloads/google-cloud-sdk/path.zsh.inc"; fi
 
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/{{- .chezmoi.username }}/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/{{- .chezmoi.username -}}/google-cloud-sdk/completion.zsh.inc'; fi
+# Shell command completion for gcloud.
+if [ -f "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc" ]; then . "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc"; fi
 
 # Helm/Kubernetes
 export TILLER_NAMESPACE=helm
@@ -184,4 +203,7 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 eval "$(atuin init zsh)"
 
 eval "$(mise activate zsh)"
+
+# fzf first, then zoxide — zoxide uses fzf for its interactive selection.
+source <(fzf --zsh)
 eval "$(zoxide init zsh)"
