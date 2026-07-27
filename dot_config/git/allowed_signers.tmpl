@@ -11,4 +11,17 @@
 # When rotating a key, don't replace the line: add the new key with
 # valid-after="YYYYMMDD" and give the old one valid-before="YYYYMMDD". That
 # keeps historical commits verifying instead of going bad at the swap.
+#
+# GitHub's merge commits are deliberately NOT listed here, and can't be. This
+# file is read by `ssh-keygen -Y verify`, so every line must carry an SSH public
+# key; GitHub signs with PGP, which the format has no slot for. Git notices the
+# `-----BEGIN PGP SIGNATURE-----` header and hands those off to gpg regardless
+# of gpg.format, so the two schemes coexist — verifying them is a keyring
+# concern, not an allowed-signers one:
+#
+#   curl -sS https://github.com/web-flow.gpg | gpg --import
+#
+# That takes `git log --format=%G?` from E (can't check — no public key) to U
+# (good signature, unknown validity). It stops at U rather than G because G
+# additionally requires setting ownertrust on a key belonging to GitHub.
 {{ .email }} namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFO9fZ9+ST3WSFxlfTaIr1MIDLxT3OQFmsnd/Lw0zWBh
