@@ -1,0 +1,20 @@
+{{/*
+
+chezmoi renders this at `chezmoi init` time to generate ~/.config/chezmoi/chezmoi.toml,
+which supplies the [data] values that the .tmpl files here depend on. Without it, a
+fresh clone fails on its first apply with:
+
+    map has no entry for key "email"
+
+promptStringOnce only prompts when the key is missing from existing config data, so
+re-running `chezmoi init` on a configured machine is a no-op, not an interrogation.
+
+To answer non-interactively, pass the *prompt text* as the key (not the variable name):
+
+    chezmoi init --promptString "Email address=you@example.com"
+
+*/}}
+{{- $email := promptStringOnce . "email" "Email address" -}}
+
+[data]
+    email = {{ $email | quote }}
