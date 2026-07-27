@@ -1,0 +1,14 @@
+# Keys trusted to sign commits, in OpenSSH allowed-signers format:
+#
+#   <principals> [options] <keytype> <base64-key>
+#
+# Git matches the *committer* email against the principals field. Only public
+# keys live here, so this file is safe to publish.
+#
+# namespaces="git" restricts each key to signatures Git itself produced — SSH
+# signatures carry a namespace, and Git uses "git".
+#
+# When rotating a key, don't replace the line: add the new key with
+# valid-after="YYYYMMDD" and give the old one valid-before="YYYYMMDD". That
+# keeps historical commits verifying instead of going bad at the swap.
+{{ .email }} namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFO9fZ9+ST3WSFxlfTaIr1MIDLxT3OQFmsnd/Lw0zWBh
