@@ -18,14 +18,15 @@ EOF
   git rev-parse --git-dir >/dev/null 2>&1 \
     || { print -u2 "gw: not a git repo"; return 1 }
 
-  local line path b
+  # NB: never name a local `path` -- zsh ties it to PATH and blanks it here.
+  local line wt b
   local -a wts
   while IFS= read -r line; do
     case $line in
-      (worktree\ *) path=${line#worktree } ;;
+      (worktree\ *) wt=${line#worktree } ;;
       (branch\ *)   b=${line#branch }; b=${b#refs/heads/}
-                    wts+=( "$b"$'\t'"$path" ) ;;
-      (detached)    wts+=( "(detached)"$'\t'"$path" ) ;;
+                    wts+=( "$b"$'\t'"$wt" ) ;;
+      (detached)    wts+=( "(detached)"$'\t'"$wt" ) ;;
     esac
   done < <(git worktree list --porcelain)
 
