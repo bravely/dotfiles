@@ -1,0 +1,12 @@
+# Sourced by EVERY zsh, including non-interactive/non-login shells
+# (editor tasks, git hooks, Claude Code hooks). Keep it minimal.
+
+# mise shims: make mise-managed tools (mix, elixir, node, …) resolvable where
+# `mise activate` cannot reach. Activation works via a precmd hook, which never
+# fires without a prompt, so non-interactive shells need the shims on PATH.
+# Interactive shells still run `mise activate` from ~/.zshrc; it prepends the
+# real tool paths ahead of these shims, so the shim indirection is skipped there.
+case ":$PATH:" in
+  *":$HOME/.local/share/mise/shims:"*) ;;
+  *) export PATH="$HOME/.local/share/mise/shims:$PATH" ;;
+esac

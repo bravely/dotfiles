@@ -1,6 +1,19 @@
 {
+  "env": {
+    "BASH_ENV": "~/.claude/shell-env.sh"
+  },
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  },
   "enabledPlugins": {
-    "mattpocock-skills@mattpocock": true
+    "mattpocock-skills@mattpocock": true,
+    "elixir-phoenix@oliver-kriska": true,
+    "ecto@oliver-kriska": true,
+    "lv@oliver-kriska": true
   },
   "extraKnownMarketplaces": {
     "mattpocock": {
@@ -8,11 +21,13 @@
         "source": "github",
         "repo": "mattpocock/skills"
       }
+    },
+    "oliver-kriska": {
+      "source": {
+        "source": "github",
+        "repo": "oliver-kriska/claude-elixir-phoenix"
+      }
     }
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/statusline.sh"
   },
   "tui": "fullscreen",
   "skipWorkflowUsageWarning": true,

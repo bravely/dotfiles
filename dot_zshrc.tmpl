@@ -186,7 +186,10 @@ export CARGO_NET_GIT_FETCH_WITH_CLI=true
 
 # pnpm
 export PNPM_HOME="/Users/{{ .chezmoi.username }}/Library/pnpm"
-export PATH="$PNPM_HOME:$PATH"
+case ":$PATH:" in
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
 # pnpm end
 
 # 1Password SSH Keys(https://developer.1password.com/docs/ssh/get-started/#step-4-configure-your-ssh-or-git-client)
@@ -202,7 +205,10 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 eval "$(atuin init zsh)"
 
-eval "$(mise activate zsh)"
+# mise is activated by the oh-my-zsh `mise` plugin (in $plugins above), which
+# runs `mise activate zsh` when oh-my-zsh is sourced. No second activation here.
+# Non-interactive shells never reach this file at all — ~/.zshenv puts mise's
+# shims on PATH for those.
 
 # fzf first, then zoxide — zoxide uses fzf for its interactive selection.
 source <(fzf --zsh)
