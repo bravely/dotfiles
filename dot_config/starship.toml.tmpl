@@ -1,0 +1,29 @@
+format = "$all"
+
+# Starship's 500ms default is too tight for large notarized binaries on macOS.
+# Node ships a ~145MB hardened-runtime binary with ~35k code-directory page
+# hashes; the first exec after macOS drops its signature-validation state costs
+# ~1.4s of kernel-side verification (measured, and not disk I/O — warming the
+# page cache first only shaved off the read). Every exec after that is ~20ms,
+# since the result is cached against the vnode. So the nodejs module blows the
+# budget once per binary per boot and is 25x under it the rest of the time.
+# 2s clears the cold case with room to spare.
+command_timeout = 2000
+
+[gcloud]
+disabled = true
+{{ if eq .chezmoi.os "darwin" }}
+# Rosetta indicator, macOS-only. A translated shell sources this same config, so
+# the arch has to be discriminated at runtime rather than baked in: under
+# translation `uname -m` reports x86_64, and Rosetta's arch preference is
+# inherited by child processes, so the `sh -c` starship spawns stays translated
+# too and the guard sees it. Natively it sees arm64 and the module hides.
+#
+# Gated at apply time rather than guarded on `uname -s` at runtime, because
+# translation is a macOS-only idea. On WSL2 the arch is whatever the Windows
+# host is and never changes, so there is nothing here worth asking about.
+[custom.architecture]
+command = "uname -m"
+when = "test \"$(uname -m)\" = x86_64"
+description = "Shows the architecture when running under Rosetta"
+{{- end }}
