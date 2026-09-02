@@ -1,0 +1,31 @@
+{
+  "title": "Hyper key (right command)",
+  "rules": [
+    {
+      "description": "Right Command to Hyper (Ctrl+Opt+Shift+Cmd)",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "right_command",
+            "modifiers": {
+              "optional": [
+                "any"
+              ]
+            }
+          },
+          "to": [
+            {
+              "key_code": "left_shift",
+              "modifiers": [
+                "left_command",
+                "left_control",
+                "left_option"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

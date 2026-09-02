@@ -13,20 +13,23 @@
     "mattpocock-skills@mattpocock": true,
     "elixir-phoenix@oliver-kriska": true,
     "ecto@oliver-kriska": true,
-    "lv@oliver-kriska": true
+    "lv@oliver-kriska": true,
+    "mattpocock-skills@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "mattpocock": {
       "source": {
         "source": "github",
         "repo": "mattpocock/skills"
-      }
+      },
+      "autoUpdate": true
     },
     "oliver-kriska": {
       "source": {
         "source": "github",
         "repo": "oliver-kriska/claude-elixir-phoenix"
-      }
+      },
+      "autoUpdate": true
     }
   },
   "tui": "fullscreen",
