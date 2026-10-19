@@ -128,8 +128,14 @@ brew "zoxide"
 brew "zsh"
 # The AI coding agent built for the terminal.
 brew "anomalyco/tap/opencode"
+# Password manager that keeps all passwords secure behind one password
+cask "1password"
 # Command-line interface for 1Password
 cask "1password-cli"
+# Display management tool
+cask "betterdisplay"
+# Anthropic's official Claude AI desktop app
+cask "claude"
 # Voice and text chat software
 cask "discord"
 # App to build and share containerised applications and microservices
@@ -152,6 +158,8 @@ cask "loom"
 cask "meetingbar"
 # Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
+# Sound and audio controller
+cask "soundsource"
 # Music streaming service
 cask "spotify"
 # System monitor for the menu bar
@@ -164,6 +172,8 @@ cask "visual-studio-code"
 cask "visual-studio-code@insiders"
 # Rust-based terminal
 cask "warp"
+# Voice-to-text dictation with AI-powered auto-editing
+cask "wispr-flow"
 # Multiplayer code editor
 cask "zed"
 mas "Kindle", id: 302584613
