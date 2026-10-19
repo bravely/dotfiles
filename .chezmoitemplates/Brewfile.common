@@ -114,8 +114,6 @@ brew "tmux"
 brew "tokei"
 # Cross-platform C++ GUI toolkit
 brew "wxwidgets"
-# JavaScript package manager
-brew "yarn"
 # Pluggable terminal workspace, with terminal multiplexer as the base feature
 brew "zellij"
 # General-purpose lossless data-compression library
