@@ -1,0 +1,291 @@
+#!/usr/bin/env zsh
+#
+# gh-repo-profile -- apply my standard GitHub repo settings profile to a repo.
+#
+# The profile was produced by auditing every non-default setting on one of my own
+# repos (2026-09-21): squash-only merges with auto-merge on, no wiki, and a
+# "Safe Main" ruleset that makes the default branch PR-only, signed, linear and
+# CI-gated with nobody -- admins included -- able to bypass it.
+#
+# Settings only. Workflow files, labels and secret *values* are out of scope; see
+# --help for what that means in practice.
+
+emulate -R zsh
+setopt errexit nounset pipefail
+
+typeset -r PROGRAM=${0:t}
+typeset -r RULESET_NAME='Safe Main'
+typeset -r DEFAULT_CI_CHECK='ci'
+
+# Secrets the workflows in this profile expect. Values are not readable through the
+# API, so the script only reports which of these are missing.
+typeset -ra EXPECTED_SECRETS=(
+  'CLAUDE_CODE_OAUTH_TOKEN:claude.yml, claude-code-review.yml'
+  'FLY_API_TOKEN:deploy.yml'
+)
+
+step() { print -r -- ''; print -r -- "==> $*" }
+info() { print -r -- "    $*" }
+warn() { print -u2 -r -- "  ! $*" }
+die()  { print -u2 -r -- "$PROGRAM: $*"; exit 1 }  # noka: ZC1004
+
+usage() {
+  cat <<EOF
+Usage: $PROGRAM [options] OWNER/REPO
+
+Apply my standard GitHub repo settings profile to OWNER/REPO.
+Idempotent: safe to re-run, and safe on an existing repo.
+
+What it sets
+
+  Repo settings   Wiki off. Squash the only merge method. Auto-merge on. Always
+                  suggest updating PR branches. Delete head branch on merge.
+  Dependabot      Vulnerability alerts on.
+  Ruleset         "$RULESET_NAME", on the default branch, with no bypass actors --
+                  not even admins. Blocks deletion and force-push, requires linear
+                  history and signed commits, and requires a pull request with 0
+                  approvals and squash as the only merge method. Requires the
+                  '$DEFAULT_CI_CHECK' status check.
+  Secrets         Reports which expected secrets are unset. Values cannot be copied.
+
+Out of scope: workflow files, .github/dependabot.yml, and labels. Half the source
+repo's behaviour lives in those, and they are repo content rather than settings.
+
+Options
+  --ci-check NAME     Status check the ruleset requires (default: $DEFAULT_CI_CHECK).
+                      This is a check *context*, which for an ordinary workflow job
+                      is the job's id -- 'jobs: $DEFAULT_CI_CHECK:' in a workflow file.
+  --no-status-check   Drop the status check rule entirely.
+  --no-signatures     Drop the signed-commits rule. While it is on, unsigned commits
+                      cannot reach the default branch by any route, and there is no
+                      bypass -- cloud agents that commit unsigned will get stuck.
+  --dry-run           Print what would be done and change nothing.
+  -h, --help          This message.
+EOF
+}
+
+# The audited profile, verbatim apart from the substitutions applied below.
+ruleset_template() {
+  cat <<'JSON'
+{
+  "name": "Safe Main",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "exclude": [],
+      "include": ["~DEFAULT_BRANCH"]
+    }
+  },
+  "bypass_actors": [],
+  "rules": [
+    { "type": "deletion" },
+    { "type": "non_fast_forward" },
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": false,
+        "required_reviewers": [],
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": false,
+        "require_extra_approval_for_unattributed_changes": true,
+        "allowed_merge_methods": ["squash"]
+      }
+    },
+    { "type": "required_linear_history" },
+    { "type": "required_signatures" },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": false,
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [{ "context": "ci" }]
+      }
+    }
+  ]
+}
+JSON
+}
+
+run() {
+  if [[ $dry_run == true ]]; then
+    print -r -- "    would run: $*"
+    return 0
+  fi
+  "$@"
+}
+
+# The required status-check context for an ordinary workflow job is the job's `name:`
+# when it has one and its id otherwise. We only look for the id, which is what
+# the profile's own ci.yml relies on. Advisory: a miss warns, it never fails the run.
+warn_if_no_ci_job() {
+  local listing name body
+  local -a files
+
+  if ! listing=$(gh api "repos/$repo/contents/.github/workflows" 2>/dev/null); then
+    warn "$repo has no .github/workflows, so the '$ci_check' check can never report."
+    warn "Nothing will be mergeable into $default_branch until it does. Add CI, or"
+    warn "re-run with --ci-check NAME or --no-status-check."
+    return 0
+  fi
+
+  files=(${(f)"$(jq -r '.[] | select(.name | test("\\.ya?ml$")) | .name' <<<"$listing")"})
+  for name in $files; do
+    body=$(gh api -H 'Accept: application/vnd.github.raw' \
+      "repos/$repo/contents/.github/workflows/$name" 2>/dev/null) || continue
+    if awk -v job="$ci_check" '
+         /^jobs:[[:space:]]*$/ { in_jobs = 1; next }
+         /^[^[:space:]#]/      { in_jobs = 0 }
+         in_jobs && $0 ~ ("^[[:space:]]+" job ":[[:space:]]*$") { found = 1 }
+         END { exit !found }' <<<"$body"; then
+      info "'$ci_check' matches a job id in .github/workflows/$name"
+      return 0
+    fi
+  done
+
+  warn "no workflow in $repo defines a job with id '$ci_check'. If no check ever"
+  warn "reports that context, nothing can merge into $default_branch. Add CI, or"
+  warn "re-run with --ci-check NAME or --no-status-check."
+}
+
+repo=''
+ci_check=$DEFAULT_CI_CHECK
+with_status=true
+with_signatures=true
+dry_run=false
+
+while (( $# )); do
+  case $1 in
+    --ci-check)
+      [[ -n ${2-} ]] || die "--ci-check needs a check name"
+      ci_check=$2; shift 2 ;;
+    --ci-check=*)      ci_check=${1#*=}; shift ;;
+    --no-status-check) with_status=false; shift ;;
+    --no-signatures)   with_signatures=false; shift ;;
+    --dry-run)         dry_run=true; shift ;;
+    -h|--help)         usage; exit 0 ;;
+    -*)                die "unknown option: $1 (try --help)" ;;
+    *)
+      [[ -z $repo ]] || die "more than one repo given: '$repo' and '$1'"
+      repo=$1; shift ;;
+  esac
+done
+
+[[ -n $repo ]] || { usage >&2; exit 1 }
+[[ -n $ci_check ]] || die "--ci-check needs a non-empty name"
+
+# Accept what you get from copying the address bar, not just OWNER/REPO.
+repo=${repo#https://github.com/}
+repo=${repo#git@github.com:}
+repo=${repo%/}
+repo=${repo%.git}
+[[ $repo == */* && $repo != */*/* ]] || die "expected OWNER/REPO, got '$repo'"
+
+(( $+commands[gh] )) || die "gh is not installed (brew install gh)"
+(( $+commands[jq] )) || die "jq is not installed (brew install jq)"
+gh auth status >/dev/null 2>&1 || die "gh is not authenticated (run: gh auth login)"
+
+repo_json=$(gh api "repos/$repo" 2>/dev/null) \
+  || die "cannot read $repo -- check the name, and that you have access to it"
+default_branch=$(jq -r '.default_branch' <<<"$repo_json")
+[[ $(jq -r '.permissions.admin // false' <<<"$repo_json") == true ]] \
+  || die "you need admin on $repo to change its settings and rulesets"
+
+print -r -- "$PROGRAM: applying the profile to $repo (default branch: $default_branch)"
+[[ $dry_run == true ]] && print -r -- "$PROGRAM: --dry-run, nothing will be changed"
+
+step 'Repo settings'
+if run gh repo edit "$repo" \
+  --enable-wiki=false \
+  --enable-merge-commit=false \
+  --enable-rebase-merge=false \
+  --enable-squash-merge \
+  --enable-auto-merge \
+  --allow-update-branch \
+  --delete-branch-on-merge
+then
+  info 'wiki off; squash-only; auto-merge, update-branch and delete-on-merge on'
+else
+  die 'gh repo edit failed -- see the error above'
+fi
+
+step 'Dependabot alerts'
+if run gh api --silent -X PUT "repos/$repo/vulnerability-alerts"; then
+  info 'enabled'
+else
+  warn "could not enable Dependabot vulnerability alerts on $repo"
+fi
+
+step "\"$RULESET_NAME\" ruleset"
+if [[ $with_status == true ]]; then
+  warn_if_no_ci_job
+else
+  info 'status check rule dropped (--no-status-check)'
+fi
+[[ $with_signatures == true ]] || info 'signed-commits rule dropped (--no-signatures)'
+
+ruleset_body=$(ruleset_template | jq \
+  --arg name "$RULESET_NAME" \
+  --arg ci_context "$ci_check" \
+  --argjson with_status "$with_status" \
+  --argjson with_signatures "$with_signatures" '
+    .name = $name
+    | .rules |= (
+        map(
+          if .type == "required_status_checks"
+          then .parameters.required_status_checks = [{ context: $ci_context }]
+          else . end
+        )
+        | map(select(
+            ($with_status or .type != "required_status_checks")
+            and ($with_signatures or .type != "required_signatures")
+          ))
+      )')
+
+# Creating a ruleset whose name is already taken fails, so re-runs update in place.
+existing_id=$(gh api "repos/$repo/rulesets" 2>/dev/null \
+  | jq -r --arg n "$RULESET_NAME" 'map(select(.name == $n)) | .[0].id // empty') \
+  || existing_id=''
+
+if [[ -n $existing_id ]]; then
+  api_method=PUT
+  api_path="repos/$repo/rulesets/$existing_id"
+  info "updating the existing ruleset (#$existing_id)"
+else
+  api_method=POST
+  api_path="repos/$repo/rulesets"
+  info 'creating the ruleset'
+fi
+
+if [[ $dry_run == true ]]; then
+  print -r -- "    would run: gh api -X $api_method $api_path --input - with:"
+  nl=$'\n'
+  print -r -- "      ${ruleset_body//$nl/$nl      }"
+else
+  print -r -- "$ruleset_body" \
+    | gh api --silent -X "$api_method" "$api_path" --input - \
+    || die "failed to apply the \"$RULESET_NAME\" ruleset"
+  info "applied to $default_branch, no bypass actors"
+fi
+
+step 'Secrets'
+secrets=$(gh api "repos/$repo/actions/secrets" --jq '.secrets[].name' 2>/dev/null) || secrets=''
+for entry in $EXPECTED_SECRETS; do
+  name=${entry%%:*}
+  used_by=${entry#*:}
+  if print -r -- "$secrets" | grep -qxF -- "$name"; then
+    info "$name is set"
+  else
+    info "$name is not set -- $used_by needs it: gh secret set $name --repo $repo"
+  fi
+done
+
+step 'Done'
+if [[ $with_signatures == true ]]; then
+  info "$default_branch now requires signed commits with no bypass. Unsigned commits"
+  info "have to be re-signed (git rebase --no-ff) before they can be merged."
+fi
+info "Verify:  gh api repos/$repo --jq '{has_wiki,allow_squash_merge,allow_merge_commit,allow_rebase_merge,allow_auto_merge,allow_update_branch,delete_branch_on_merge}'"
+info "         gh api repos/$repo/rulesets"
