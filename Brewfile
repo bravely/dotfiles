@@ -1,84 +1,189 @@
-tap "1password/tap"
-brew "asdf"
+tap "1password/tap", trusted: true
+tap "anomalyco/tap", trusted: true
+tap "rconroy293/seventeenlands"
+# Static checker for GitHub Actions workflow files
+brew "actionlint"
+# Improved shell history for zsh, bash, fish and nushell
 brew "atuin"
-brew "openssl@3"
+# Cryptography and SSL/TLS Toolkit
+brew "openssl@3", link: true
+# Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
+# Toolchain of the web
 brew "biome"
+# Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
+# Cloudflare Tunnel client (formerly Argo Tunnel)
 brew "cloudflared"
+# GNU File, Shell, and Text utilities
 brew "coreutils"
+# Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
+# Process manager for dev and prod
+brew "dekit"
+# Diff that understands syntax
 brew "difftastic"
+# View disk space usage and delete unwanted data, fast
 brew "dua-cli"
+# More intuitive version of du in rust
 brew "dust"
+# Select default apps for documents and URL schemes on macOS
 brew "duti"
+# Modern, maintained replacement for ls
 brew "eza"
+# Simple, fast and user-friendly alternative to find
 brew "fd"
+# Command-line tools for fly.io services
+brew "flyctl"
+# C/C++ and Java libraries for Unicode and globalization
+brew "icu4c@78"
+# OpenType text shaping engine
 brew "harfbuzz"
+# Development kit for the Java programming language
 brew "openjdk"
+# XSL-FO print formatter for making PDF or PS documents
 brew "fop"
+# Find files with SQL-like queries
 brew "fselect"
+# Command-line fuzzy finder written in Go
 brew "fzf"
+# Library for command-line editing
 brew "readline"
+# GNU awk utility
 brew "gawk"
+# GNU compiler collection
 brew "gcc"
+# GitHub command-line tool
+brew "gh"
+# Distributed revision control system
 brew "git"
+# High-velocity, monorepo-scale workflow for Git
 brew "git-branchless"
+# Syntax-highlighting pager for git and diff output
 brew "git-delta"
+# Blazing fast terminal-ui for git written in rust
 brew "gitui"
+# Validating, recursive, caching DNS resolver
 brew "unbound"
+# GNU Transport Layer Security (TLS) Library
 brew "gnutls"
+# GNU Privacy Guard (OpenPGP)
 brew "gnupg"
+# Gorgeous metric visualizations and dashboards for timeseries databases
 brew "grafana"
+# Command-line benchmarking tool
 brew "hyperfine"
+# C/C++ and Java libraries for Unicode and globalization
 brew "icu4c@77"
+# Manage your Java environment
 brew "jenv"
+# Lightweight and flexible command-line JSON processor
 brew "jq"
+# Modern load testing tool, using Go and JavaScript
 brew "k6"
+# Keep your Mac's application settings in sync
 brew "mackup"
+# Mac App Store command-line interface
 brew "mas"
-brew "mise"
-brew "mprocs"
+# Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
+# CLI for Postgres with auto-completion and syntax highlighting
 brew "pgcli"
+# Execute binaries from Python packages in isolated environments
 brew "pipx"
+# Package compiler and linker metadata toolkit
 brew "pkgconf"
+# Fast, disk space efficient package manager
 brew "pnpm", link: false
+# Unix pager optimized for psql
 brew "pspg"
+# Show ps output as a tree
 brew "pstree"
+# Python version management
 brew "pyenv"
+# Interpreted, interactive, object-oriented programming language
 brew "python@3.11"
+# Rsync for cloud storage
+brew "rclone"
+# Fast, efficient and secure backup program
+brew "restic"
+# Search tool like grep and The Silver Searcher
 brew "ripgrep"
+# Wrapper around ripgrep that adds multiple rich file types
 brew "ripgrep-all"
+# SOcket CAT: netcat on steroids
 brew "socat"
+# Cross-shell prompt for astronauts
 brew "starship"
+# Text interface for Git repositories
 brew "tig"
+# Simplified and community-driven man pages
 brew "tldr"
+# Terminal multiplexer
 brew "tmux"
+# Program that allows you to count code, quickly
 brew "tokei"
+# Cross-platform C++ GUI toolkit
 brew "wxwidgets"
+# JavaScript package manager
 brew "yarn"
+# Pluggable terminal workspace, with terminal multiplexer as the base feature
 brew "zellij"
+# General-purpose lossless data-compression library
 brew "zlib"
+# Shell extension to navigate your filesystem faster
 brew "zoxide"
+# UNIX shell (command interpreter)
 brew "zsh"
+# The AI coding agent built for the terminal.
+brew "anomalyco/tap/opencode"
+# Utility to upload MTG Arena data to 17Lands.com
+brew "rconroy293/seventeenlands/seventeenlands", trusted: true
+# Command-line interface for 1Password
 cask "1password-cli"
+# Voice and text chat software
 cask "discord"
+# App to build and share containerised applications and microservices
 cask "docker-desktop"
 cask "font-fira-code"
 cask "font-jetbrains-mono-nerd-font"
+# Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
+# Java IDE by JetBrains
 cask "intellij-idea"
+# Terminal emulator as alternative to Apple's Terminal app
 cask "iterm2"
+# Keyboard customiser
 cask "karabiner-elements"
+# Animated screen capture application
 cask "licecap"
+# Screen and video recording software
 cask "loom"
+# Shows the next meeting in the menu bar
 cask "meetingbar"
+# Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
+# Music streaming service
 cask "spotify"
+# System monitor for the menu bar
+cask "stats"
+# To-do list
 cask "todoist-app"
+# Open-source code editor
 cask "visual-studio-code"
+# Open-source code editor
 cask "visual-studio-code@insiders"
+# Rust-based terminal
 cask "warp"
+# Multiplayer code editor
+cask "zed"
+mas "Kindle", id: 302584613
 mas "Magnet", id: 441258766
 vscode "anthropic.claude-code"
+go "cmd/go"
+go "cmd/gofmt"
+go "golang.org/x/tools/cmd/goimports"
+go "github.com/golangci/golangci-lint/cmd/golangci-lint"
+go "golang.org/x/tools/gopls"
+npm "@withgraphite/graphite-cli"
+npm "corepack"
