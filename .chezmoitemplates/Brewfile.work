@@ -1,0 +1,4 @@
+# Issue tracker for software development
+cask "linear"
+# Workspace for notes, docs and project planning
+cask "notion"

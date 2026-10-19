@@ -2,10 +2,10 @@
 #
 # brewfile-sync -- compare what's installed against the Brewfile lists in chezmoi.
 #
-# The Brewfile is a chezmoi template that stitches together two plain lists,
-# .chezmoitemplates/Brewfile.common and .chezmoitemplates/Brewfile.personal, so a
+# The Brewfile is a chezmoi template that stitches together plain lists,
+# .chezmoitemplates/Brewfile.common plus Brewfile.personal or Brewfile.work, so a
 # fresh `brew bundle dump` can't be copied over it. This runs the dump and reports
-# the difference instead, leaving the deciding (common or personal?) to me.
+# the difference instead, leaving the deciding (common, personal or work?) to me.
 #
 # Read-only: it never edits the lists or installs anything.
 
@@ -24,10 +24,10 @@ Usage: $PROGRAM
 Dump what Homebrew has installed and compare it with the Brewfile lists in the
 chezmoi source directory. Reports:
 
-  New        Installed, but in neither list. Printed with their description
-             comments, ready to paste into Brewfile.common or Brewfile.personal.
-  Missing    In this machine's lists (common, plus personal on a personal
-             machine) but not installed. Either install them or drop them.
+  New        Installed, but in no list. Printed with their description
+             comments, ready to paste into Brewfile.common, .personal or .work.
+  Missing    In this machine's lists (common, plus personal or work to match
+             the machine) but not installed. Either install them or drop them.
 
 Taps are left out of "New" when an entry in the lists already names the tap in
 full (e.g. brew "owner/tap/formula"), since that entry taps it on its own.
@@ -41,7 +41,7 @@ EOF
 
 typeset -r LISTS="$(chezmoi source-path)/.chezmoitemplates"
 typeset -r MACHINE_TYPE=$(chezmoi execute-template '{{ .machineType }}')
-[[ -f $LISTS/Brewfile.common && -f $LISTS/Brewfile.personal ]] \
+[[ -f $LISTS/Brewfile.common && -f $LISTS/Brewfile.personal && -f $LISTS/Brewfile.work ]] \
   || die "lists not found in $LISTS"
 
 # Turn a Brewfile into "key<TAB>block" records, one per entry. The key is the
@@ -70,9 +70,9 @@ typeset -r dump=$(brew bundle dump --file=-)
 typeset -A installed listed wanted
 local key block
 while IFS=$'\t' read -r key block; do installed[$key]=$block; done < <(records =(print -r -- $dump))
-while IFS=$'\t' read -r key block; do listed[$key]=1; done < <(records $LISTS/Brewfile.common $LISTS/Brewfile.personal)
+while IFS=$'\t' read -r key block; do listed[$key]=1; done < <(records $LISTS/Brewfile.common $LISTS/Brewfile.personal $LISTS/Brewfile.work)
 local -a mine=($LISTS/Brewfile.common)
-[[ $MACHINE_TYPE == personal ]] && mine+=($LISTS/Brewfile.personal)
+[[ -f $LISTS/Brewfile.$MACHINE_TYPE ]] && mine+=($LISTS/Brewfile.$MACHINE_TYPE)
 while IFS=$'\t' read -r key block; do wanted[$key]=1; done < <(records $mine)
 
 local -a new missing
@@ -90,7 +90,7 @@ print -r -- "Lists: $LISTS"
 
 print -r -- ''
 if (( $#new )); then
-  print -r -- "New -- installed but in neither list (${#new}):"
+  print -r -- "New -- installed but in no list (${#new}):"
   for key in $new; do print -r -- ''; print -r -- "${installed[$key]//\\n/$NL}"; done
 else
   print -r -- 'New: none'
