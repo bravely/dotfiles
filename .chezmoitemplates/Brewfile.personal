@@ -1,0 +1,4 @@
+# Command-line tools for fly.io services
+brew "flyctl"
+# Utility to upload MTG Arena data to 17Lands.com
+brew "rconroy293/seventeenlands/seventeenlands", trusted: true

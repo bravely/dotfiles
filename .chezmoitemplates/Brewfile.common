@@ -1,6 +1,3 @@
-tap "1password/tap", trusted: true
-tap "anomalyco/tap", trusted: true
-tap "rconroy293/seventeenlands"
 # Static checker for GitHub Actions workflow files
 brew "actionlint"
 # Improved shell history for zsh, bash, fish and nushell
@@ -33,16 +30,10 @@ brew "duti"
 brew "eza"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
-# Command-line tools for fly.io services
-brew "flyctl"
 # C/C++ and Java libraries for Unicode and globalization
 brew "icu4c@78"
 # OpenType text shaping engine
 brew "harfbuzz"
-# Development kit for the Java programming language
-brew "openjdk"
-# XSL-FO print formatter for making PDF or PS documents
-brew "fop"
 # Find files with SQL-like queries
 brew "fselect"
 # Command-line fuzzy finder written in Go
@@ -137,8 +128,6 @@ brew "zoxide"
 brew "zsh"
 # The AI coding agent built for the terminal.
 brew "anomalyco/tap/opencode"
-# Utility to upload MTG Arena data to 17Lands.com
-brew "rconroy293/seventeenlands/seventeenlands", trusted: true
 # Command-line interface for 1Password
 cask "1password-cli"
 # Voice and text chat software
