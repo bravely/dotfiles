@@ -152,6 +152,8 @@ cask "loom"
 cask "meetingbar"
 # Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
+# Team communication and collaboration software
+cask "slack"
 # Sound and audio controller
 cask "soundsource"
 # Music streaming service
