@@ -1,0 +1,105 @@
+#!/usr/bin/env zsh
+#
+# brewfile-sync -- compare what's installed against the Brewfile lists in chezmoi.
+#
+# The Brewfile is a chezmoi template that stitches together two plain lists,
+# .chezmoitemplates/Brewfile.common and .chezmoitemplates/Brewfile.personal, so a
+# fresh `brew bundle dump` can't be copied over it. This runs the dump and reports
+# the difference instead, leaving the deciding (common or personal?) to me.
+#
+# Read-only: it never edits the lists or installs anything.
+
+emulate -R zsh
+setopt errexit nounset pipefail
+
+typeset -r PROGRAM=${0:t}
+typeset -r NL=$'\n'
+
+die() { print -u2 -r -- "$PROGRAM: $*"; exit 1 }  # noka: ZC1004
+
+usage() {
+  cat <<EOF
+Usage: $PROGRAM
+
+Dump what Homebrew has installed and compare it with the Brewfile lists in the
+chezmoi source directory. Reports:
+
+  New        Installed, but in neither list. Printed with their description
+             comments, ready to paste into Brewfile.common or Brewfile.personal.
+  Missing    In this machine's lists (common, plus personal on a personal
+             machine) but not installed. Either install them or drop them.
+
+Taps are left out of "New" when an entry in the lists already names the tap in
+full (e.g. brew "owner/tap/formula"), since that entry taps it on its own.
+EOF
+}
+
+(( $# == 0 )) || { [[ $1 == (-h|--help) ]] && { usage; exit 0 }; usage >&2; exit 2 }
+
+(( $+commands[brew] )) || die 'brew not found'
+(( $+commands[chezmoi] )) || die 'chezmoi not found'
+
+typeset -r LISTS="$(chezmoi source-path)/.chezmoitemplates"
+typeset -r MACHINE_TYPE=$(chezmoi execute-template '{{ .machineType }}')
+[[ -f $LISTS/Brewfile.common && -f $LISTS/Brewfile.personal ]] \
+  || die "lists not found in $LISTS"
+
+# Turn a Brewfile into "key<TAB>block" records, one per entry. The key is the
+# entry's type and name (`brew "jq"`), so option changes don't count as new; the
+# block is the entry plus the comment lines above it, with newlines as \n.
+records() {
+  awk '
+    /^#/ { block = block $0 "\\n"; next }
+    /^[a-z]+ "/ {
+      match($0, /^[a-z]+ "[^"]*"/)
+      printf "%s\t%s%s\n", substr($0, RSTART, RLENGTH), block, $0
+    }
+    { block = "" }
+  ' "$@"
+}
+
+# True when a listed entry names this tap in full, so it needn't be listed itself.
+tap_implied() {
+  local k
+  for k in ${(k)listed}; do [[ $k == *\"$1/* ]] && return 0; done
+  return 1
+}
+
+typeset -r dump=$(brew bundle dump --file=-)
+
+typeset -A installed listed wanted
+local key block
+while IFS=$'\t' read -r key block; do installed[$key]=$block; done < <(records =(print -r -- $dump))
+while IFS=$'\t' read -r key block; do listed[$key]=1; done < <(records $LISTS/Brewfile.common $LISTS/Brewfile.personal)
+local -a mine=($LISTS/Brewfile.common)
+[[ $MACHINE_TYPE == personal ]] && mine+=($LISTS/Brewfile.personal)
+while IFS=$'\t' read -r key block; do wanted[$key]=1; done < <(records $mine)
+
+local -a new missing
+for key in ${(ko)installed}; do
+  (( $+listed[$key] )) && continue
+  [[ $key == tap\ * ]] && tap_implied ${${key#tap \"}%\"} && continue
+  new+=$key
+done
+for key in ${(ko)wanted}; do
+  (( $+installed[$key] )) || missing+=$key
+done
+
+print -r -- "Machine type: $MACHINE_TYPE"
+print -r -- "Lists: $LISTS"
+
+print -r -- ''
+if (( $#new )); then
+  print -r -- "New -- installed but in neither list (${#new}):"
+  for key in $new; do print -r -- ''; print -r -- "${installed[$key]//\\n/$NL}"; done
+else
+  print -r -- 'New: none'
+fi
+
+print -r -- ''
+if (( $#missing )); then
+  print -r -- "Missing -- listed for this machine but not installed (${#missing}):"
+  for key in $missing; do print -r -- "  $key"; done
+else
+  print -r -- 'Missing: none'
+fi

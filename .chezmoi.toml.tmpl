@@ -11,10 +11,15 @@ re-running `chezmoi init` on a configured machine is a no-op, not an interrogati
 
 To answer non-interactively, pass the *prompt text* as the key (not the variable name):
 
-    chezmoi init --promptString "Email address=you@example.com"
+    chezmoi init --promptString "Email address=you@example.com" \
+                 --promptChoice "Is this a work or personal machine=work"
+
+machineType ("personal" or "work") gates personal-only entries in Brewfile.tmpl.
 
 */}}
 {{- $email := promptStringOnce . "email" "Email address" -}}
+{{- $machineType := promptChoiceOnce . "machineType" "Is this a work or personal machine" (list "personal" "work") -}}
 
 [data]
     email = {{ $email | quote }}
+    machineType = {{ $machineType | quote }}

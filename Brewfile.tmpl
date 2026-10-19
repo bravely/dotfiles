@@ -1,0 +1,7 @@
+{{- /*
+  The entries live in plain Brewfiles under .chezmoitemplates/ so that a
+  `brew bundle dump` can be compared against them without template code in the
+  way. Run brewfile-sync to see what the dump has that the lists don't.
+*/ -}}
+{{ template "Brewfile.common" . -}}
+{{ if eq .machineType "personal" }}{{ template "Brewfile.personal" . }}{{ end -}}
