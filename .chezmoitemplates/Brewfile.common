@@ -108,16 +108,12 @@ brew "socat"
 brew "starship"
 # Text interface for Git repositories
 brew "tig"
-# Simplified and community-driven man pages
-brew "tldr"
 # Terminal multiplexer
 brew "tmux"
 # Program that allows you to count code, quickly
 brew "tokei"
 # Cross-platform C++ GUI toolkit
 brew "wxwidgets"
-# JavaScript package manager
-brew "yarn"
 # Pluggable terminal workspace, with terminal multiplexer as the base feature
 brew "zellij"
 # General-purpose lossless data-compression library
@@ -146,8 +142,6 @@ cask "font-jetbrains-mono-nerd-font"
 cask "ghostty"
 # Web browser
 cask "google-chrome"
-# Terminal emulator as alternative to Apple's Terminal app
-cask "iterm2"
 # Keyboard customiser
 cask "karabiner-elements"
 # Animated screen capture application
@@ -167,11 +161,7 @@ cask "stats"
 # To-do list
 cask "todoist-app"
 # Open-source code editor
-cask "visual-studio-code"
-# Open-source code editor
 cask "visual-studio-code@insiders"
-# Rust-based terminal
-cask "warp"
 # Voice-to-text dictation with AI-powered auto-editing
 cask "wispr-flow"
 # Multiplayer code editor
