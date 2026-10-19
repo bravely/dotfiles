@@ -158,6 +158,8 @@ cask "loom"
 cask "meetingbar"
 # Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
+# Sound and audio controller
+cask "soundsource"
 # Music streaming service
 cask "spotify"
 # System monitor for the menu bar
