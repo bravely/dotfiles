@@ -46,7 +46,8 @@ In order. Each step depends on the ones before it.
 
    - **Email address**: used for `user.email` and as the principal in
      `~/.config/git/allowed_signers`.
-   - **Work or personal machine**: personal machines also get `Brewfile.personal`.
+   - **Work or personal machine**: personal machines also get `Brewfile.personal`,
+     work machines `Brewfile.work`.
 
    `--apply` then renders everything in one pass. Without that config, the first apply
    fails with `map has no entry for key "email"`. The `.chezmoi.toml.tmpl` in this repo

@@ -5,3 +5,4 @@
 */ -}}
 {{ template "Brewfile.common" . -}}
 {{ if eq .machineType "personal" }}{{ template "Brewfile.personal" . }}{{ end -}}
+{{ if eq .machineType "work" }}{{ template "Brewfile.work" . }}{{ end -}}
