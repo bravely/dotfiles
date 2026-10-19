@@ -10,21 +10,16 @@ In order. Each step depends on the ones before it.
 1. **Sign in to the App Store.** `brew bundle` installs Mac App Store apps through
    `mas`, which can't sign in for you.
 
-2. **Install the Xcode command line tools** (git, compilers):
-
-   ```sh
-   xcode-select --install
-   ```
-
-3. **Install Homebrew**, then put it on `PATH` for this shell. The rendered `.zshrc`
-   does that for later shells.
+2. **Install Homebrew**, then put it on `PATH` for this shell. The rendered `.zshrc`
+   does that for later shells. The installer also installs the Xcode command line
+   tools (git, compilers) if they're missing.
 
    ```sh
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
    eval "$(/opt/homebrew/bin/brew shellenv)"
    ```
 
-4. **Install oh-my-zsh and its one third-party plugin** *before* chezmoi. Running the
+3. **Install oh-my-zsh and its one third-party plugin** *before* chezmoi. Running the
    installer after chezmoi fails, because chezmoi has already created `~/.oh-my-zsh/custom`.
    `--keep-zshrc` stops it writing a `.zshrc` that chezmoi would then overwrite.
 
@@ -33,14 +28,14 @@ In order. Each step depends on the ones before it.
    git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
    ```
 
-5. **Install mise.** It isn't in the Brewfile. It installs to `~/.local/bin/mise`, which
+4. **Install mise.** It isn't in the Brewfile. It installs to `~/.local/bin/mise`, which
    the oh-my-zsh `mise` plugin activates.
 
    ```sh
    curl https://mise.run | sh
    ```
 
-6. **Apply the dotfiles.** No SSH keys exist yet, so clone over HTTPS (the repo is public):
+5. **Apply the dotfiles.** No SSH keys exist yet, so clone over HTTPS (the repo is public):
 
    ```sh
    brew install chezmoi
@@ -57,28 +52,28 @@ In order. Each step depends on the ones before it.
    fails with `map has no entry for key "email"`. The `.chezmoi.toml.tmpl` in this repo
    exists to prevent that.
 
-7. **Install everything else** (formulae, casks, Mac App Store apps):
+6. **Install everything else** (formulae, casks, Mac App Store apps):
 
    ```sh
    brew bundle --file=~/Brewfile
    ```
 
-8. **Set up 1Password.** Sign in to the desktop app and turn on its SSH agent
+7. **Set up 1Password.** Sign in to the desktop app and turn on its SSH agent
    (Settings → Developer). Commit signing depends on it: `.gitconfig` points
    `gpg.ssh.program` at its `op-ssh-sign`, and `.zshrc` points `SSH_AUTH_SOCK` at
    `~/.1password/agent.sock`.
 
-9. **Switch the dotfiles remote to SSH** now that keys are available, and log in to `gh`:
+8. **Switch the dotfiles remote to SSH** now that keys are available, and log in to `gh`:
 
    ```sh
    chezmoi git -- remote set-url origin git@github.com:bravely/dotfiles.git
    gh auth login
    ```
 
-10. **Grant permissions** when macOS asks: Karabiner-Elements needs Input Monitoring
-    and its driver extension approved under Privacy & Security.
+9. **Grant permissions** when macOS asks: Karabiner-Elements needs Input Monitoring
+   and its driver extension approved under Privacy & Security.
 
-11. **Open a new terminal** so the rendered `.zshrc` loads, then run `chezmoi diff`. It
+10. **Open a new terminal** so the rendered `.zshrc` loads, then run `chezmoi diff`. It
     should print nothing.
 
 Not covered here: mise's own tool config (`~/.config/mise/config.toml`) isn't in this
