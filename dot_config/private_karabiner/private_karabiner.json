@@ -5,6 +5,7 @@
                 "rules": [
                     {
                         "description": "Right Command to Hyper (Ctrl+Opt+Shift+Cmd)",
+                        "enabled": false,
                         "manipulators": [
                             {
                                 "from": {
