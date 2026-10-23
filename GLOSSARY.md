@@ -19,3 +19,7 @@ _Avoid_: Stable skill, global skill
 **Experimental skill**:
 A skill of my own that is still being tried out and lives in this repo. It becomes a Promoted skill when it moves to jake-mode.
 _Avoid_: Draft skill, local skill
+
+**Wiring**:
+Making a skill or rule visible to Claude Code by linking it from where it lives into the harness's own directories.
+_Avoid_: Installing (that is what happens to a plugin)
