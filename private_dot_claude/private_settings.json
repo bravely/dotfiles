@@ -10,24 +10,14 @@
     "command": "~/.claude/statusline.sh"
   },
   "enabledPlugins": {
-    "mattpocock-skills@mattpocock": true,
-    "elixir-phoenix@oliver-kriska": true,
-    "ecto@oliver-kriska": true,
-    "lv@oliver-kriska": true,
-    "mattpocock-skills@claude-plugins-official": true
+    "mattpocock-skills@claude-plugins-official": true,
+    "pstack@cursor-plugins": true
   },
   "extraKnownMarketplaces": {
-    "mattpocock": {
+    "cursor-plugins": {
       "source": {
         "source": "github",
-        "repo": "mattpocock/skills"
-      },
-      "autoUpdate": true
-    },
-    "oliver-kriska": {
-      "source": {
-        "source": "github",
-        "repo": "oliver-kriska/claude-elixir-phoenix"
+        "repo": "cursor/plugins"
       },
       "autoUpdate": true
     }
