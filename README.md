@@ -77,6 +77,21 @@ In order. Each step depends on the ones before it.
 10. **Open a new terminal** so the rendered `.zshrc` loads, then run `chezmoi diff`. It
     should print nothing.
 
+11. **Install Claude Code and let it fetch its plugins.** chezmoi has already written
+    `~/.claude/settings.json`, which declares the plugins every machine gets. Claude Code
+    installs them in the background during its first session, so launch it once, quit,
+    and check:
+
+    ```sh
+    curl -fsSL https://claude.ai/install.sh | bash
+    claude
+    claude plugin list
+    ```
+
+    The list should show `mattpocock-skills@claude-plugins-official` and
+    `pstack@cursor-plugins`. My own Promoted skills come from jake-mode, wired in
+    separately by its `wire-skills` skill.
+
 Not covered here: mise's own tool config (`~/.config/mise/config.toml`) isn't in this
 repo, so install runtimes with `mise use -g` as you need them.
 
@@ -91,6 +106,10 @@ chezmoi re-add    # pull edits made directly to a target file back into the sour
 Beware: `chezmoi apply` overwrites targets from the source, so installers that append to
 `~/.zshrc` get erased. Run `chezmoi diff` after installing anything that edits dotfiles,
 and fold what you want to keep back into the source.
+
+The same goes for Claude Code: `/plugin`, `/config` and `/model` write to the live
+`~/.claude/settings.json`. To keep a plugin or setting on every machine, run
+`chezmoi re-add ~/.claude/settings.json` and commit; otherwise the next apply reverts it.
 
 ## Scripts
 
