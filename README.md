@@ -49,7 +49,9 @@ In order. Each step depends on the ones before it.
    - **Work or personal machine**: personal machines also get `Brewfile.personal`,
      work machines `Brewfile.work`.
 
-   `--apply` then renders everything in one pass. Without that config, the first apply
+   `--apply` then renders everything in one pass. That includes cloning
+   [jake-mode](https://github.com/bravely/jake-mode) to `~/dev/jake-mode` over HTTPS and
+   linking its skills and rules into `~/.claude/`. Without that config, the first apply
    fails with `map has no entry for key "email"`. The `.chezmoi.toml.tmpl` in this repo
    exists to prevent that.
 
@@ -64,10 +66,12 @@ In order. Each step depends on the ones before it.
    `gpg.ssh.program` at its `op-ssh-sign`, and `.zshrc` points `SSH_AUTH_SOCK` at
    `~/.1password/agent.sock`.
 
-8. **Switch the dotfiles remote to SSH** now that keys are available, and log in to `gh`:
+8. **Switch the dotfiles and jake-mode remotes to SSH** now that keys are available, and
+   log in to `gh`:
 
    ```sh
    chezmoi git -- remote set-url origin git@github.com:bravely/dotfiles.git
+   git -C ~/dev/jake-mode remote set-url origin git@github.com:bravely/jake-mode.git
    gh auth login
    ```
 
@@ -89,8 +93,10 @@ In order. Each step depends on the ones before it.
     ```
 
     The list should show `mattpocock-skills@claude-plugins-official` and
-    `pstack@cursor-plugins`. My own Promoted skills come from jake-mode, wired in
-    separately by its `wire-skills` skill.
+    `pstack@cursor-plugins`. My own Promoted skills come from jake-mode, which step 5
+    already cloned and wired; `ls -l ~/.claude/skills` should show links into
+    `~/dev/jake-mode`. If one is missing, jake-mode's `wire-skills` skill has the
+    troubleshooting order.
 
 Not covered here: mise's own tool config (`~/.config/mise/config.toml`) isn't in this
 repo, so install runtimes with `mise use -g` as you need them.
@@ -110,6 +116,13 @@ and fold what you want to keep back into the source.
 The same goes for Claude Code: `/plugin`, `/config` and `/model` write to the live
 `~/.claude/settings.json`. To keep a plugin or setting on every machine, run
 `chezmoi re-add ~/.claude/settings.json` and commit; otherwise the next apply reverts it.
+
+`chezmoi apply` also keeps jake-mode current: at most once an hour it runs
+`git pull --ff-only` in `~/dev/jake-mode`, then relinks its skills and rules, pruning links
+to any that were removed. If that checkout has diverged from `origin`, is on a branch with
+no upstream, or has uncommitted edits to files the pull would change, the pull fails and
+so does the whole apply. Sort out jake-mode's main checkout and apply again. To pull now
+instead of waiting out the hour: `chezmoi apply --refresh-externals`.
 
 ## Scripts
 

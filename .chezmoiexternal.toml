@@ -1,0 +1,15 @@
+# jake-mode holds my Promoted skills and global rules. chezmoi keeps the
+# checkout current; run_after_link-jake-mode.sh.tmpl wires it into Claude Code.
+# A diverged checkout fails the pull, and with it the whole apply.
+#
+# clone.args pins this repo's fetches to HTTPS. dot_gitconfig.tmpl rewrites
+# https://github.com/ to SSH, and on a new machine .gitconfig lands before this
+# clone while there are no SSH keys yet. A longer insteadOf in the clone's own
+# config wins over that rewrite. README step 8 later points origin at SSH.
+# See docs/adr/0001-jake-mode-as-a-chezmoi-external.md.
+["dev/jake-mode"]
+    type = "git-repo"
+    url = "https://github.com/bravely/jake-mode.git"
+    refreshPeriod = "1h"
+    pull.args = ["--ff-only"]
+    clone.args = ["--config", "url.https://github.com/bravely/jake-mode.insteadOf=https://github.com/bravely/jake-mode"]

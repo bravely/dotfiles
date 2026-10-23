@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# Wire jake-mode's skills and rules into Claude Code on every apply. Runs
+# after externals, so .chezmoiexternal.toml has already cloned or pulled it.
+# --prune drops links to skills a pull renamed or removed.
+
+set -eu
+
+exec "{{ .chezmoi.destDir }}/dev/jake-mode/bin/link" --prune \
+  --skills-target "{{ .chezmoi.destDir }}/.claude/skills" \
+  --rules-target "{{ .chezmoi.destDir }}/.claude/rules"
