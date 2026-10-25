@@ -2,8 +2,8 @@
 
 Every machine gets jake-mode by declaring it in `.chezmoiexternal.toml` as a git-repo
 external at `~/dev/jake-mode`, pulled at most hourly with `--ff-only`. A `run_after_`
-script then runs jake-mode's `bin/link --prune`. jake-mode holds only Promoted skills, so
-tracking `main` automatically is what we want. Linking stays in `bin/link` so jake-mode
+script then runs jake-mode's `bin/link --prune`. jake-mode is where every skill of my own
+lives, so tracking `main` automatically is what we want. Linking stays in `bin/link` so jake-mode
 remains the one place that knows how its skills and rules flatten into a harness.
 
 ## Considered Options
