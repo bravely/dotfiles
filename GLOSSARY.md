@@ -13,12 +13,16 @@ A skill that arrives through a Declared plugin, written and maintained by someon
 _Avoid_: Third-party skill
 
 **Promoted skill**:
-A skill of my own that has proven itself and lives in jake-mode.
+A skill of my own that has proven itself. Like every skill of my own, it lives in jake-mode.
 _Avoid_: Stable skill, global skill
 
 **Experimental skill**:
-A skill of my own that is still being tried out and lives in this repo. It becomes a Promoted skill when it moves to jake-mode.
+A skill of my own that is still being tried out and is marked as such. It lives in jake-mode beside the Promoted skills and reaches the same places they do; it becomes a Promoted skill when the mark comes off.
 _Avoid_: Draft skill, local skill
+
+**Reach**:
+Where a skill of mine can be used. A skill with reach `all` is uploaded to my Claude account, so it works in chat, on mobile, and in every kind of Claude Code session. A skill with reach `code` works only in Claude Code sessions, local or cloud. A skill is `code` unless marked otherwise.
+_Avoid_: Scope, surface (a surface is one place Claude runs, not a setting of the skill)
 
 **Wiring**:
 Making a skill or rule visible to Claude Code by linking it from where it lives into the harness's own directories.
