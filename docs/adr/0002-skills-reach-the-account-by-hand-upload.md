@@ -29,8 +29,8 @@ runs its `bin/cloud-setup`, which wires them into the VM's `~/.claude` the same 
 ## Consequences
 
 - Skill frontmatter may only use the keys claude.ai accepts (`name`, `description`,
-  `license`, `compatibility`, `metadata`, `allowed-tools`), so custom marks such as reach
-  and experimental go under `metadata`.
+  `license`, `compatibility`, `metadata`, `allowed-tools`), so custom fields such as reach and
+  experimental go under `metadata`.
 - On a Mac, `bin/link` skips `all` skills, because the account sync already delivers them
   and linking them too would list each one twice. An edit to an `all` skill is not live
   locally until it is uploaded, unless I link it on purpose for a test.

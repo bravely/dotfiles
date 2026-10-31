@@ -17,11 +17,11 @@ A skill of my own that has proven itself. Like every skill of my own, it lives i
 _Avoid_: Stable skill, global skill
 
 **Experimental skill**:
-A skill of my own that is still being tried out and is marked as such. It lives in jake-mode beside the Promoted skills and reaches the same places they do; it becomes a Promoted skill when the mark comes off.
+A skill of my own that is still being tried out, which a metadata field on the skill says. It lives in jake-mode beside the Promoted skills and reaches the same places they do; it becomes a Promoted skill when that field comes off.
 _Avoid_: Draft skill, local skill
 
 **Reach**:
-Where a skill of mine can be used. A skill with reach `all` is uploaded to my Claude account, so it works in chat, on mobile, and in every kind of Claude Code session. A skill with reach `code` works only in Claude Code sessions, local or cloud. A skill is `code` unless marked otherwise.
+Where a skill of mine can be used. A skill with reach `all` is uploaded to my Claude account, so it works in chat, on mobile, and in every kind of Claude Code session. A skill with reach `code` works only in Claude Code sessions, local or cloud. A skill is `code` unless its metadata field says otherwise.
 _Avoid_: Scope, surface (a surface is one place Claude runs, not a setting of the skill)
 
 **Wiring**:
