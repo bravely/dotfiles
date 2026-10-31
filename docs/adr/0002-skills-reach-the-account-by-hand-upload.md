@@ -6,7 +6,7 @@ upload has no API: the Skills API writes to a separate API-workspace store that 
 and Claude Code never read. So I upload `all` skills by hand, and jake-mode's CI makes that
 cheap and hard to forget. A required check on any PR touching an `all` skill builds the
 upload zips, validates their frontmatter against what claude.ai accepts, and passes only
-once the PR carries the `account-synced` label. Reach `code` skills and all rules reach
+once the PR carries the `claude-account-synced` label. Reach `code` skills and all rules reach
 cloud sessions a different way: each cloud environment's setup script clones jake-mode and
 runs its `bin/cloud-setup`, which wires them into the VM's `~/.claude` the same way
 `bin/link` does on a Mac.
