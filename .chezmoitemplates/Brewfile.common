@@ -6,6 +6,8 @@ brew "atuin"
 brew "openssl@3", link: true
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
+# Bash Automated Testing System
+brew "bats-core"
 # Toolchain of the web
 brew "biome"
 # Manage your dotfiles across multiple diverse machines, securely
