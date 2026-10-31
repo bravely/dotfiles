@@ -10,3 +10,7 @@ case ":$PATH:" in
   *":$HOME/.local/share/mise/shims:"*) ;;
   *) export PATH="$HOME/.local/share/mise/shims:$PATH" ;;
 esac
+
+# Machine-local secrets (tokens, keys) that must never reach this public repo.
+# ~/.secrets.sh is untracked and listed in .chezmoiignore; a missing file is skipped.
+if [[ -r ~/.secrets.sh ]]; then source ~/.secrets.sh; fi
