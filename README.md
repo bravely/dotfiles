@@ -152,3 +152,44 @@ Two sharp edges the ruleset creates, both with an escape hatch:
 
 Settings only. Workflow files, `.github/dependabot.yml` and labels are repo content
 rather than settings, and are not copied.
+
+`~/.local/bin/claude-rc` keeps a `claude remote-control` server running for a repo,
+so I can start sessions in it from claude.ai/code or the Claude mobile app while this
+Mac is awake. Each server is a LaunchAgent that starts at login and is restarted if it
+dies. The script writes the agents on demand rather than chezmoi writing them, because
+which repos get one differs per machine and they often aren't cloned when chezmoi runs.
+
+```sh
+claude-rc ensure [DIR]           # set up or update the server for the repo at DIR (default: here); no-op if current
+claude-rc status                 # every server and the updater, and what's wrong with each
+claude-rc restart [DIR | --all]  # restart one server, or all of them
+claude-rc remove [DIR]           # stop it and delete its LaunchAgent, even if the repo is gone
+```
+
+A worktree resolves to its main checkout, so running it from a session's worktree
+sets up the repo itself; a submodule is served as itself. `ensure` rewrites and
+reloads a server whose LaunchAgent differs from what the script writes now, so
+rerunning it after the script changes picks the change up. Everything exits 1
+when it couldn't do what was asked, so another session can rely on the status. Each remote session gets its own worktree
+(`--spawn=worktree`) and runs in auto permission mode. The servers use whichever
+Claude account this Mac is logged in to, so a work machine serves the work account.
+Logs are in `~/Library/Logs/claude-rc-<path>.log`.
+
+`ensure` also installs one updater agent per machine. It watches
+`~/.local/bin/claude` and runs `claude-rc restart --all` when it changes, because
+Claude's updater prunes old versions, and a server still running a pruned version
+reports Ready while every session it starts fails.
+
+A server has no terminal to answer prompts, so two one-time steps come first, and
+`ensure` refuses until they're done:
+
+1. Run `claude` in the repo and accept the folder-trust prompt.
+2. Once per Mac, run `claude remote-control` in a terminal, answer `y`, wait for
+   Ready, then Ctrl+C. That terminal run keeps the folder registered for a few
+   minutes after it stops. A server started meanwhile fails with "already served
+   by a terminal `claude remote-control`" and launchd retries it every minute
+   until the registration expires. A server restarted by launchd doesn't hit this.
+
+Each start registers a new environment rather than reusing the last one, so every
+restart, including the updater's, leaves a grayed-out entry for that repo in the
+Claude app. The live one is the one that isn't grayed out.
