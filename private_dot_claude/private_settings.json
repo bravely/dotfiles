@@ -16,8 +16,8 @@
   "extraKnownMarketplaces": {
     "cursor-plugins": {
       "source": {
-        "source": "github",
-        "repo": "cursor/plugins"
+        "source": "git",
+        "url": "https://github.com/cursor/plugins.git"
       },
       "autoUpdate": true
     }
