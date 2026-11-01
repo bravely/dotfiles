@@ -193,3 +193,52 @@ A server has no terminal to answer prompts, so two one-time steps come first, an
 Each start registers a new environment rather than reusing the last one, so every
 restart, including the updater's, leaves a grayed-out entry for that repo in the
 Claude app. The live one is the one that isn't grayed out.
+
+## Tests
+
+```sh
+bats test/
+```
+
+The suite takes about 40 seconds on a Mac. It needs `bats-core`, `chezmoi` and `jq`
+(bats and chezmoi are in the Brewfile) and nothing else. No network, no secrets, no
+GitHub token. CI runs the same command on `macos-latest` for every pull request and
+every push to `main`. The job is called `ci`, which is the check `gh-repo-profile`
+requires by default.
+
+Each script and template is tested the way it is installed. `chezmoi apply` puts the
+scripts in a throwaway home, and the real `plutil`, `jq`, `git` and `chezmoi` run
+against it. `launchctl`, `claude`, `gh`, `brew`, `starship` and `sleep` are stubs in
+`test/stubs/`. `launchctl` remembers what is loaded, and `gh` answers from a route
+table and records what it was sent.
+
+No test can touch this Mac. Every command a test runs gets an empty environment, a
+home inside the test's own temporary directory, and a `PATH` that lists only the real
+tools in `test/harness.bash` and the stubs. On top of that, macOS's sandbox refuses it
+any write outside that directory, any access to your real home (the repo under test
+excepted), the network, and the real `launchctl`. The live LaunchAgents,
+`~/.claude.json` and your GitHub settings are out of reach by construction.
+`test/isolation.bats` tests those promises. If it fails, trust no other result.
+
+To test a new script, add `test/<name>.bats` (`test/repo.bats` fails until you do),
+start it with `load harness`, and call the script by name:
+
+```bash
+@test "--no-signatures drops only the signed-commits rule" {
+  run gh-repo-profile --no-signatures bravely/example
+  [ "$status" -eq 0 ]
+  [[ $(stub gh sent | jq -r '[.rules[].type] | join(" ")') != *required_signatures* ]] || false
+}
+```
+
+`stub TOOL VERB` configures a stub or reads back what it saw (`calls`, `sent`, `fail`,
+plus the verbs listed at the top of each file in `test/stubs/`). A stub exits 99 on a
+call it does not model, so a script that starts using a new subcommand fails the test
+instead of passing by luck.
+
+Write every `[[ ]]` assertion as `[[ ... ]] || false`. Bats runs on macOS's bash 3.2,
+which ignores a failing `[[ ]]` that is not a test's last command, so the test would
+pass without checking anything. `test/repo.bats` fails on a line that starts with `[[`
+or `!` and does not end in `|| false`. For a negated command, use `run` and check
+`$status`. Bash 3.2 also ignores a failing command inside `$(...)`, so a fixture that
+tests call that way ends each step in `|| return 1`.
