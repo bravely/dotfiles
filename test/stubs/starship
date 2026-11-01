@@ -1,0 +1,36 @@
+#!/bin/bash
+# Stand-in for starship's `prompt`. Prints the configured text the way real starship
+# does for the statusline's purposes:
+#   - the default format's shape (a blank line, the segments, then the character
+#     line), unless the verb below is given raw text that already has its own shape
+#   - plain text when STARSHIP_SHELL=sh; for any other shell every line is wrapped in
+#     zsh's %{ %}, which Claude Code would print literally
+#   - the literal token @PWD@ becomes the directory starship ran in, so a test can
+#     see which directory the script rendered for
+#
+# Verbs for tests:
+#   prompt        stdin is the whole output (e.g. a blank line, a segment line, "❯ ")
+
+# shellcheck source=stub.sh
+. "${STUB_HOME:?stub run outside a test sandbox}/stub.sh"
+
+behave() {
+  [ "${1-}" = prompt ] || stub_unexpected "$@"
+  local text line
+  text=$(cat "$STUB_DIR/prompt" 2>/dev/null || true)
+  text=${text//@PWD@/$PWD}
+  if [ "${STARSHIP_SHELL-}" = sh ]; then
+    printf '%s\n' "$text"
+  else
+    while IFS= read -r line; do printf '%%{%s%%}\n' "$line"; done <<<"$text"
+  fi
+}
+
+ctl() {
+  case $1 in
+    prompt) cat >"$STUB_DIR/prompt" ;;
+    *) echo "stub starship: unknown verb: $1" >&2; return 2 ;;
+  esac
+}
+
+stub_main starship "$@"

@@ -1,0 +1,11 @@
+#!/bin/bash
+# Stand-in for sleep: returns at once, so a script that polls (claude-rc waits up
+# to 5 s for launchd to unload a job) costs the suite nothing. The calls are
+# recorded, so a test can still see that it waited.
+
+# shellcheck source=stub.sh
+. "${STUB_HOME:?stub run outside a test sandbox}/stub.sh"
+
+behave() { return 0; }
+
+stub_main sleep "$@"
