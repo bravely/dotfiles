@@ -227,6 +227,10 @@ suite_build() {
   mkdir -p "$tools"
   for name in "${suite_real_tools[@]}"; do
     path=$(real_tool "$name") || { echo "setup_suite: no $name on this machine outside $SUITE_REAL_HOME" >&2; return 1; }
+    # Apple's /usr/bin/git is an xcrun shim. With its cache cold (a fresh CI runner) it
+    # writes the cache, which the fence refuses, so warm it here, outside the fence.
+    [ "$path" != /usr/bin/git ] || "$path" --version >/dev/null ||
+      { echo "setup_suite: $path does not run" >&2; return 1; }
     ln -s "$path" "$tools/$name"
   done
   # Every executable in stubs/ is a stub. Adding one is adding a file.
