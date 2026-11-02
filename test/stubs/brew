@@ -1,0 +1,25 @@
+#!/bin/bash
+# Stand-in for Homebrew. brewfile-sync only dumps what is installed, so that is the
+# one call modelled; an install or a bundle without --file=- is an unexpected call.
+#
+# Verbs for tests:
+#   dump          stdin becomes the Brewfile that `brew bundle dump --file=-` prints
+
+# shellcheck source=stub.sh
+. "${STUB_HOME:?stub run outside a test sandbox}/stub.sh"
+
+behave() {
+  case "$*" in
+    'bundle dump --file=-') cat "$STUB_DIR/dump" 2>/dev/null || true ;;
+    *) stub_unexpected "$@" ;;
+  esac
+}
+
+ctl() {
+  case $1 in
+    dump) cat >"$STUB_DIR/dump" ;;
+    *) echo "stub brew: unknown verb: $1" >&2; return 2 ;;
+  esac
+}
+
+stub_main brew "$@"

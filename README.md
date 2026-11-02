@@ -152,3 +152,93 @@ Two sharp edges the ruleset creates, both with an escape hatch:
 
 Settings only. Workflow files, `.github/dependabot.yml` and labels are repo content
 rather than settings, and are not copied.
+
+`~/.local/bin/claude-rc` keeps a `claude remote-control` server running for a repo,
+so I can start sessions in it from claude.ai/code or the Claude mobile app while this
+Mac is awake. Each server is a LaunchAgent that starts at login and is restarted if it
+dies. The script writes the agents on demand rather than chezmoi writing them, because
+which repos get one differs per machine and they often aren't cloned when chezmoi runs.
+
+```sh
+claude-rc ensure [DIR]           # set up or update the server for the repo at DIR (default: here); no-op if current
+claude-rc status                 # every server and the updater, and what's wrong with each
+claude-rc restart [DIR | --all]  # restart one server, or all of them
+claude-rc remove [DIR]           # stop it and delete its LaunchAgent, even if the repo is gone
+```
+
+A worktree resolves to its main checkout, so running it from a session's worktree
+sets up the repo itself; a submodule is served as itself. `ensure` rewrites and
+reloads a server whose LaunchAgent differs from what the script writes now, so
+rerunning it after the script changes picks the change up. Everything exits 1
+when it couldn't do what was asked, so another session can rely on the status. Each remote session gets its own worktree
+(`--spawn=worktree`) and runs in auto permission mode. The servers use whichever
+Claude account this Mac is logged in to, so a work machine serves the work account.
+Logs are in `~/Library/Logs/claude-rc-<path>.log`.
+
+`ensure` also installs one updater agent per machine. It watches
+`~/.local/bin/claude` and runs `claude-rc restart --all` when it changes, because
+Claude's updater prunes old versions, and a server still running a pruned version
+reports Ready while every session it starts fails.
+
+A server has no terminal to answer prompts, so two one-time steps come first, and
+`ensure` refuses until they're done:
+
+1. Run `claude` in the repo and accept the folder-trust prompt.
+2. Once per Mac, run `claude remote-control` in a terminal, answer `y`, wait for
+   Ready, then Ctrl+C. That terminal run keeps the folder registered for a few
+   minutes after it stops. A server started meanwhile fails with "already served
+   by a terminal `claude remote-control`" and launchd retries it every minute
+   until the registration expires. A server restarted by launchd doesn't hit this.
+
+Each start registers a new environment rather than reusing the last one, so every
+restart, including the updater's, leaves a grayed-out entry for that repo in the
+Claude app. The live one is the one that isn't grayed out.
+
+## Tests
+
+```sh
+bats test/
+```
+
+The suite takes about 40 seconds on a Mac. It needs `bats-core`, `chezmoi` and `jq`
+(bats and chezmoi are in the Brewfile) and nothing else. No network, no secrets, no
+GitHub token. CI runs the same command on `macos-latest` for every pull request and
+every push to `main`. The job is called `ci`, which is the check `gh-repo-profile`
+requires by default.
+
+Each script and template is tested the way it is installed. `chezmoi apply` puts the
+scripts in a throwaway home, and the real `plutil`, `jq`, `git` and `chezmoi` run
+against it. `launchctl`, `claude`, `gh`, `brew`, `starship` and `sleep` are stubs in
+`test/stubs/`. `launchctl` remembers what is loaded, and `gh` answers from a route
+table and records what it was sent.
+
+No test can touch this Mac. Every command a test runs gets an empty environment, a
+home inside the test's own temporary directory, and a `PATH` that lists only the real
+tools in `test/harness.bash` and the stubs. On top of that, macOS's sandbox refuses it
+any write outside that directory, any access to your real home (the repo under test
+excepted), the network, and the real `launchctl`. The live LaunchAgents,
+`~/.claude.json` and your GitHub settings are out of reach by construction.
+`test/isolation.bats` tests those promises. If it fails, trust no other result.
+
+To test a new script, add `test/<name>.bats` (`test/repo.bats` fails until you do),
+start it with `load harness`, and call the script by name:
+
+```bash
+@test "--no-signatures drops only the signed-commits rule" {
+  run gh-repo-profile --no-signatures bravely/example
+  [ "$status" -eq 0 ]
+  [[ $(stub gh sent | jq -r '[.rules[].type] | join(" ")') != *required_signatures* ]] || false
+}
+```
+
+`stub TOOL VERB` configures a stub or reads back what it saw (`calls`, `sent`, `fail`,
+plus the verbs listed at the top of each file in `test/stubs/`). A stub exits 99 on a
+call it does not model, so a script that starts using a new subcommand fails the test
+instead of passing by luck.
+
+Write every `[[ ]]` assertion as `[[ ... ]] || false`. Bats runs on macOS's bash 3.2,
+which ignores a failing `[[ ]]` that is not a test's last command, so the test would
+pass without checking anything. `test/repo.bats` fails on a line that starts with `[[`
+or `!` and does not end in `|| false`. For a negated command, use `run` and check
+`$status`. Bash 3.2 also ignores a failing command inside `$(...)`, so a fixture that
+tests call that way ends each step in `|| return 1`.

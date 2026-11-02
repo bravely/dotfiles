@@ -1,0 +1,84 @@
+#!/bin/bash
+# Stand-in for the GitHub CLI, for gh-repo-profile. It models the API calls the
+# script makes and answers them from a small route table, so a test states the
+# world in GitHub's own JSON and the stub applies --jq like the real gh does.
+#
+# Reads are served from "routes", keyed by the path after repos/OWNER/REPO/ (the
+# repo itself is `repo`). With no configuration every route answers for a healthy
+# world: an admin on a repo whose default branch is main, with a workflow that
+# defines a `ci` job, no ruleset yet, and no secrets set. Writes (`repo edit`, and
+# `api -X PUT|POST`) succeed, and any `--input -` body is captured for `sent`.
+#
+# Verbs for tests:
+#   route KEY            stdin becomes the JSON (or raw file text) a GET of KEY returns
+#   route-fails KEY      a GET of KEY fails like a 404
+#   logged-out           `gh auth status` fails from now on
+
+# shellcheck source=stub.sh
+. "${STUB_HOME:?stub run outside a test sandbox}/stub.sh"
+
+route_file() { echo "$STUB_DIR/routes/${1//\//__}"; }
+
+default_route() {
+  case $1 in
+    repo) echo '{"default_branch": "main", "permissions": {"admin": true}}' ;;
+    contents/.github/workflows) echo '[{"name": "ci.yml"}]' ;;
+    contents/.github/workflows/ci.yml) printf 'name: ci\non: [push]\njobs:\n  ci:\n    runs-on: macos-latest\n' ;;
+    rulesets) echo '[]' ;;
+    actions/secrets) echo '{"total_count": 0, "secrets": []}' ;;
+    *) return 1 ;;
+  esac
+}
+
+api() {
+  local method=GET path='' jq_expr='' input='' key
+  while [ $# -gt 0 ]; do
+    case $1 in
+      -X) method=$2; shift 2 ;;
+      -H) shift 2 ;;
+      --jq) jq_expr=$2; shift 2 ;;
+      --input) input=$2; shift 2 ;;
+      --silent) shift ;;
+      -*) stub_unexpected api "$@" ;;
+      *) path=$1; shift ;;
+    esac
+  done
+  [ "$input" != - ] || stub_capture_stdin
+  [ "$method" = GET ] || return 0
+
+  case $path in
+    repos/*/*/*) key=${path#repos/*/*/} ;;
+    repos/*/*)   key=repo ;;
+    *) stub_unexpected api "$path" ;;
+  esac
+  if [ -e "$(route_file "$key").fails" ]; then
+    echo "gh: Not Found (HTTP 404)" >&2
+    return 1
+  fi
+  local body
+  if [ -f "$(route_file "$key")" ]; then body=$(cat "$(route_file "$key")")
+  else body=$(default_route "$key") || stub_unexpected api "$path"; fi
+  if [ -n "$jq_expr" ]; then jq -r "$jq_expr" <<<"$body"; else printf '%s\n' "$body"; fi
+}
+
+behave() {
+  case "${1-} ${2-}" in
+    'auth status')
+      [ ! -e "$STUB_DIR/logged-out" ] || { echo "You are not logged in" >&2; return 1; }
+      echo "Logged in to github.com" ;;
+    'repo edit') return 0 ;;
+    'api '*) shift; api "$@" ;;
+    *) stub_unexpected "$@" ;;
+  esac
+}
+
+ctl() {
+  case $1 in
+    route)       mkdir -p "$STUB_DIR/routes"; cat >"$(route_file "$2")" ;;
+    route-fails) mkdir -p "$STUB_DIR/routes"; : >"$(route_file "$2").fails" ;;
+    logged-out)  : >"$STUB_DIR/logged-out" ;;
+    *) echo "stub gh: unknown verb: $1" >&2; return 2 ;;
+  esac
+}
+
+stub_main gh "$@"

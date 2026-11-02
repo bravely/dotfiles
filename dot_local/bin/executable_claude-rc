@@ -1,0 +1,399 @@
+#!/usr/bin/env zsh
+#
+# claude-rc -- keep a `claude remote-control` server running for a repo, so I can
+# start sessions in it from my phone while this Mac is awake.
+#
+# Each server is a LaunchAgent, written on demand rather than by chezmoi: the repos
+# I want served differ per machine and often aren't cloned when chezmoi runs. The
+# agent starts at login and launchd restarts it if it dies. It uses whichever Claude
+# account this Mac is logged in to.
+
+emulate -R zsh
+setopt errexit nounset pipefail extendedglob
+
+typeset -r PROGRAM=${0:t}
+typeset -r LABEL_PREFIX='com.bravely.claude-remote-control'
+typeset -r AGENTS_DIR="$HOME/Library/LaunchAgents"
+typeset -r LOGS_DIR="$HOME/Library/Logs"
+typeset -r DOMAIN="gui/$(id -u)"
+typeset -r UPDATER_LABEL='com.bravely.claude-rc-updater'
+typeset -r UPDATER_PLIST="$AGENTS_DIR/$UPDATER_LABEL.plist"
+typeset -r UPDATER_PROGRAM="$HOME/.local/bin/claude-rc"
+
+info() { print -r -- "$PROGRAM: $*" }
+warn() { print -u2 -r -- "$PROGRAM: warning: $*" }
+die()  { print -u2 -r -- "$PROGRAM: $*"; exit 1 }  # noka: ZC1004
+
+usage() {
+  cat <<EOF
+Usage: $PROGRAM ensure [DIR]
+       $PROGRAM status
+       $PROGRAM restart [DIR | --all]
+       $PROGRAM remove [DIR]
+
+Keep a Remote Control server running for the git checkout containing DIR
+(default: the current directory), so sessions can be started in it from
+claude.ai/code or the Claude mobile app. A linked worktree resolves to its main
+checkout; a submodule is served as itself.
+
+  ensure   Bring the repo's server up to date: install it, rewrite and reload it
+           if its LaunchAgent differs from what this script writes now, or load
+           it if it isn't loaded. Exits 1 if the server can't work or is failing.
+  status   List every server and the updater, and what is wrong with each.
+  restart  Restart the repo's server, or every server with --all. Exits 1 if any
+           server it was asked to restart isn't loaded.
+  remove   Stop the server and delete its LaunchAgent. DIR may be a repo that has
+           since been deleted or moved. Removing the last one also removes the
+           updater.
+
+Servers run 'claude remote-control --spawn=worktree --permission-mode auto', so
+each remote session gets its own worktree. Logs go to $LOGS_DIR.
+ensure also installs one updater agent per machine, which runs 'restart --all'
+whenever ~/.local/bin/claude changes: a server left on a version the updater has
+pruned still reports Ready, but every session it starts fails.
+
+A server can't answer prompts, so ensure refuses until both one-time prompts are
+done: run 'claude' in the repo once to trust it, and 'claude remote-control' in a
+terminal once to enable Remote Control on this Mac (answer y, wait for Ready,
+Ctrl+C). That terminal run holds the folder for a few minutes after Ctrl+C, and
+a server started meanwhile is refused and retried every minute until it clears.
+EOF
+}
+
+# The checkout to serve for $1. A linked worktree maps to the main checkout, which
+# git lists first, so all of a repo's worktrees share one server. When that entry
+# isn't a checkout (a bare clone, or a submodule, which git lists by its gitdir),
+# the checkout containing $1 is served as itself.
+repo_root() {
+  is_checkout "$1" || die "$1 is not inside a git checkout"
+  local main
+  main=$(git -C "$1" worktree list --porcelain | awk '
+    /^worktree / && !path { path = substr($0, 10) }
+    END { print path }')
+  if [[ -z $main ]] || ! is_checkout "$main"; then
+    main=$(git -C "$1" rev-parse --show-toplevel)
+  fi
+  print -r -- "$main"
+}
+
+is_checkout() {
+  [[ -d $1 && $(git -C "$1" rev-parse --is-inside-work-tree 2>/dev/null) == true ]]
+}
+
+# The label of the agent already serving $1, found by its WorkingDirectory. Labels
+# are chosen once, by new_label, and never derived from the path again.
+label_of() {
+  local plist
+  for plist in $AGENTS_DIR/$LABEL_PREFIX.*.plist(N); do
+    if [[ $(plutil -extract WorkingDirectory raw -o - "$plist" 2>/dev/null) == "$1" ]]; then
+      print -r -- "${${plist:t}%.plist}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# dev/dotfiles -> dev-dotfiles. Different paths can flatten to the same slug
+# (dev/foo-bar, dev/foo/bar), so a taken slug gets a hash of the full path.
+new_label() {
+  local rel=${1#$HOME/} label
+  rel=${rel#/}
+  label="$LABEL_PREFIX.${rel//[^A-Za-z0-9._-]/-}"
+  if [[ -e $AGENTS_DIR/$label.plist ]]; then
+    label="$label-$(print -rn -- "$1" | shasum -a 256 | cut -c1-8)"
+  fi
+  print -r -- "$label"
+}
+
+# launchd's description of a loaded job; fails when it isn't loaded.
+job() { launchctl print "$DOMAIN/$1" 2>/dev/null }
+is_loaded() { job "$1" >/dev/null }
+
+# One top-level field of a job ("pid", "last exit code"), or nothing.
+job_field() {
+  local out
+  out=$(job "$1") || return 0
+  print -r -- "$out" | awk -F' = ' -v key="$2" '
+    { sub(/^[ \t]+/, "", $1) } $1 == key && !seen++ { print $2 }'
+}
+
+# Waits out an asynchronous bootout, so a bootstrap right after it doesn't clash.
+wait_unloaded() {
+  local i
+  for i in {1..50}; do
+    is_loaded "$1" || return 0
+    sleep 0.1
+  done
+  die "launchd is still unloading $1"
+}
+
+# Trust is recorded per folder in ~/.claude.json, and a trusted ancestor covers it.
+is_trusted() {
+  local dir=$1
+  [[ -f $HOME/.claude.json ]] || return 1
+  while true; do
+    if jq -e --arg d "$dir" '.projects[$d].hasTrustDialogAccepted == true' \
+         "$HOME/.claude.json" >/dev/null 2>&1; then
+      return 0
+    fi
+    [[ $dir == / ]] && return 1
+    dir=${dir:h}
+  done
+}
+
+# The one-time "Enable Remote Control? (y/n)" answer. The server can't ask it
+# without a terminal, so it would sit at the prompt forever.
+has_consented() {
+  jq -e '.remoteDialogSeen == true' "$HOME/.claude.json" >/dev/null 2>&1
+}
+
+# Everything a server needs and can't ask for. Checked on every ensure, since
+# an agent that is already installed stops working when any of these lapses.
+preflight() {
+  claude auth status >/dev/null 2>&1 \
+    || die "claude is not logged in on this Mac (run: claude, then /login)"
+  is_trusted "$1" \
+    || die "$1 hasn't been trusted yet; run 'claude' there once and accept the prompt"
+  has_consented \
+    || die "Remote Control hasn't been enabled on this Mac; run 'claude remote-control' in a terminal once, answer y, wait for Ready, then Ctrl+C. Give it a few minutes before running ensure: until its registration expires, a new server is refused"
+}
+
+xml() {
+  local s=$1
+  s=${s//&/&amp;}
+  s=${s//</&lt;}
+  print -rn -- "${s//>/&gt;}"
+}
+
+server_plist() {
+  local label=$1 root=$2 log=$3
+  cat <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$label</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$(xml "$HOME")/.local/bin/claude</string>
+    <string>remote-control</string>
+    <string>--spawn=worktree</string>
+    <string>--permission-mode</string>
+    <string>auto</string>
+    <string>--no-create-session-in-dir</string>
+    <string>--name</string>
+    <string>$(xml "${root:t}")</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>$(xml "$root")</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>$(xml "$HOME")/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>60</integer>
+  <key>StandardOutPath</key>
+  <string>$(xml "$log")</string>
+  <key>StandardErrorPath</key>
+  <string>$(xml "$log")</string>
+</dict>
+</plist>
+EOF
+}
+
+updater_plist() {
+  cat <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$UPDATER_LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$(xml "$UPDATER_PROGRAM")</string>
+    <string>restart</string>
+    <string>--all</string>
+  </array>
+  <key>WatchPaths</key>
+  <array>
+    <string>$(xml "$HOME")/.local/bin/claude</string>
+  </array>
+  <key>StandardOutPath</key>
+  <string>$(xml "$LOGS_DIR")/claude-rc-updater.log</string>
+  <key>StandardErrorPath</key>
+  <string>$(xml "$LOGS_DIR")/claude-rc-updater.log</string>
+</dict>
+</plist>
+EOF
+}
+
+# Writes $2 to the plist at $1 unless it already says exactly that. Returns 1 when
+# nothing changed, so a plist from an older version of this script gets replaced.
+install_plist() {
+  local plist=$1 tmp=$1.tmp
+  print -r -- "$2" >"$tmp"
+  plutil -lint -s "$tmp" || { rm -f "$tmp"; die "wrote an invalid plist for $3" }
+  if [[ -f $plist ]] && cmp -s "$tmp" "$plist"; then
+    rm -f "$tmp"
+    return 1
+  fi
+  mv "$tmp" "$plist"
+}
+
+# Loads the agent, reloading it when its plist changed, since kickstart and a
+# running job both keep the old one. Returns 1 when it was already up to date.
+load() {
+  local label=$1 plist=$2 changed=$3
+  if is_loaded "$label"; then
+    [[ $changed == true ]] || return 1
+    launchctl bootout "$DOMAIN/$label"
+    wait_unloaded "$label"
+  fi
+  launchctl bootstrap "$DOMAIN" "$plist" || die "launchctl could not load $plist"
+}
+
+# What stops the updater from restarting servers on a Claude update, or nothing.
+updater_problem() {
+  if ! is_loaded "$UPDATER_LABEL"; then
+    print -r -- 'not loaded (run: claude-rc ensure in any served repo)'
+  elif [[ ! -x $UPDATER_PROGRAM ]]; then
+    print -r -- "$UPDATER_PROGRAM is missing (run: chezmoi apply), so servers won't restart when claude updates"
+  fi
+}
+
+ensure_updater() {
+  local changed=false problem
+  install_plist "$UPDATER_PLIST" "$(updater_plist)" 'the updater' && changed=true
+  load "$UPDATER_LABEL" "$UPDATER_PLIST" $changed \
+    && info 'updater installed; it restarts servers when claude updates'
+  problem=$(updater_problem)
+  [[ -z $problem ]] || warn "updater: $problem"
+}
+
+cmd_ensure() {
+  local root label plist log pid code changed=false
+  root=$(repo_root "$1")
+  preflight "$root"
+  mkdir -p "$AGENTS_DIR" "$LOGS_DIR"
+  label=$(label_of "$root") || label=$(new_label "$root")
+  plist="$AGENTS_DIR/$label.plist"
+  log="$LOGS_DIR/claude-rc-${label#$LABEL_PREFIX.}.log"
+
+  install_plist "$plist" "$(server_plist "$label" "$root" "$log")" "$root" && changed=true
+  if load "$label" "$plist" $changed; then
+    info "$root: started. Log: $log"
+  else
+    pid=$(job_field "$label" pid)
+    code=$(job_field "$label" 'last exit code')
+    if [[ -n $pid ]]; then
+      info "$root: already running (pid $pid)"
+    elif [[ -n $code && $code != '(never exited)' && $code != 0 ]]; then
+      ensure_updater
+      die "$root: loaded but failing (last exit $code), and launchd keeps retrying it. See $log"
+    else
+      info "$root: loaded; launchd is about to start it. Log: $log"
+    fi
+  fi
+  ensure_updater
+}
+
+cmd_status() {
+  local plist label root pid code state problem
+  local -a plists=($AGENTS_DIR/$LABEL_PREFIX.*.plist(N))
+  (( $#plists )) || info 'no servers installed'
+  for plist in $plists; do
+    label=${${plist:t}%.plist}
+    root=$(plutil -extract WorkingDirectory raw -o - "$plist" 2>/dev/null) || root="? ($plist)"
+    if ! is_loaded "$label"; then
+      state='not loaded (run: claude-rc ensure in the repo)'
+    else
+      pid=$(job_field "$label" pid)
+      code=$(job_field "$label" 'last exit code')
+      if [[ -n $pid ]]; then
+        state="running (pid $pid)"
+      else
+        state='loaded, not running'
+      fi
+      if [[ -n $code && $code != '(never exited)' && $code != 0 ]]; then
+        state+="; last exit $code, see $(plutil -extract StandardOutPath raw -o - "$plist" 2>/dev/null)"
+      fi
+    fi
+    [[ -d $root ]] || state+="; directory is gone (run: claude-rc remove '$root')"
+    print -r -- "$root: $state"
+  done
+  if (( $#plists )) || [[ -f $UPDATER_PLIST ]]; then
+    problem=$(updater_problem)
+    print -r -- "updater: ${problem:-loaded}"
+  fi
+}
+
+cmd_restart() {
+  local label root skipped=false
+  local -a labels
+  if [[ $1 == --all ]]; then
+    local -a plists=($AGENTS_DIR/$LABEL_PREFIX.*.plist(N))
+    labels=(${${plists:t}%.plist})
+  else
+    root=$(repo_root "$1")
+    label=$(label_of "$root") || die "$root has no server (run: claude-rc ensure)"
+    labels=($label)
+  fi
+  for label in $labels; do
+    root=$(plutil -extract WorkingDirectory raw -o - "$AGENTS_DIR/$label.plist" 2>/dev/null) \
+      || root=${label#$LABEL_PREFIX.}
+    if is_loaded "$label"; then
+      launchctl kickstart -k "$DOMAIN/$label"
+      info "$root: restarted"
+    else
+      info "$root: not loaded, skipped (run: claude-rc ensure in the repo)"
+      skipped=true
+    fi
+  done
+  [[ $skipped == false ]]
+}
+
+cmd_remove() {
+  local root label plist
+  # A deleted or moved repo can't be resolved, so it is matched by the path given.
+  root=$(repo_root "$1" 2>/dev/null) || root=${1:A}
+  if ! label=$(label_of "$root"); then
+    info "$root: no server installed"
+    return 0
+  fi
+  plist="$AGENTS_DIR/$label.plist"
+  if is_loaded "$label"; then
+    launchctl bootout "$DOMAIN/$label"
+  fi
+  rm -f "$plist"
+  info "$root: removed"
+  # The last server out takes the updater with it.
+  local -a left=($AGENTS_DIR/$LABEL_PREFIX.*.plist(N))
+  if (( ! $#left )) && [[ -f $UPDATER_PLIST ]]; then
+    if is_loaded "$UPDATER_LABEL"; then
+      launchctl bootout "$DOMAIN/$UPDATER_LABEL"
+    fi
+    rm -f "$UPDATER_PLIST"
+    info 'removed the updater'
+  fi
+}
+
+(( $+commands[jq] )) || die 'jq is not installed (brew install jq)'
+[[ -x $HOME/.local/bin/claude ]] || die "claude not found at $HOME/.local/bin/claude"
+
+case ${1-} in
+  ensure|remove|restart)
+    (( $# <= 2 )) || { usage >&2; exit 2 }
+    cmd_$1 "${2:-$PWD}" ;;
+  status)
+    (( $# == 1 )) || { usage >&2; exit 2 }
+    cmd_status ;;
+  -h|--help) usage ;;
+  *) usage >&2; exit 2 ;;
+esac

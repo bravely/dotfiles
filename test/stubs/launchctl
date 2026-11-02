@@ -1,0 +1,101 @@
+#!/bin/bash
+# Stand-in for launchctl, with just enough launchd to be stateful: a job is loaded
+# by `bootstrap`, gone after `bootout`, and `print` tells the truth about both.
+# That statefulness is the point. claude-rc reloads a changed agent by bootout, wait
+# until `print` says it is gone, then bootstrap; against a stub that stays loaded
+# the wait would run out, and against one that ignores state a missing bootout
+# would go unnoticed.
+#
+# Faithful where the scripts depend on it:
+#   - bootstrap of a label that is still loaded (or still unloading) exits 5, as launchd does
+#   - print of an unknown label exits 113 with nothing on stdout
+#   - kickstart of an unknown label exits 113
+#   - print lists fields tab-indented as `key = value`; a job that is not running has no pid line
+#
+# Verbs for tests:
+#   loaded LABEL [pid=N] [exit=N]   the job is loaded (no pid unless given; exit defaults to "(never exited)")
+#   unload-lag N|forever            after bootout, `print` keeps reporting the job N more times
+#   loaded-labels                   labels launchd currently holds, one per line, sorted
+
+# shellcheck source=stub.sh
+. "${STUB_HOME:?stub run outside a test sandbox}/stub.sh"
+
+jobs_dir() { echo "$STUB_DIR/jobs"; }
+label_of_target() { echo "${1#gui/*/}"; }   # gui/501/LABEL -> LABEL
+
+next_pid() {
+  local n=4199
+  [ ! -f "$STUB_DIR/pidseq" ] || read -r n <"$STUB_DIR/pidseq"
+  n=$((n + 1))
+  echo "$n" >"$STUB_DIR/pidseq"
+  echo "$n"
+}
+
+# A job is a file of key=value lines; an `unloading` file beside it holds how many
+# more prints still see it.
+write_job() {   # LABEL PLIST PID EXIT
+  mkdir -p "$(jobs_dir)"
+  { echo "path=$2"; echo "pid=$3"; echo "exit=${4:-(never exited)}"; } >"$(jobs_dir)/$1"
+}
+
+job_value() { sed -n "s/^$2=//p" "$(jobs_dir)/$1"; }
+
+behave() {
+  local label
+  case ${1-} in
+    print)
+      label=$(label_of_target "${2-}")
+      [ -f "$(jobs_dir)/$label" ] || return 113
+      if [ -f "$(jobs_dir)/$label.unloading" ]; then
+        local left; left=$(cat "$(jobs_dir)/$label.unloading")
+        if [ "$left" = 0 ]; then rm -f "$(jobs_dir)/$label" "$(jobs_dir)/$label.unloading"; return 113; fi
+        [ "$left" = forever ] || echo $((left - 1)) >"$(jobs_dir)/$label.unloading"
+      fi
+      printf '%s = {\n\tactive count = 1\n\tpath = %s\n\ttype = LaunchAgent\n' "${2}" "$(job_value "$label" path)"
+      printf '\tlast exit code = %s\n' "$(job_value "$label" exit)"
+      [ -z "$(job_value "$label" pid)" ] || printf '\tpid = %s\n' "$(job_value "$label" pid)"
+      printf '}\n' ;;
+    bootstrap)
+      local plist=${3-}
+      [ -f "$plist" ] && plutil -lint -s "$plist" >/dev/null 2>&1 \
+        || { echo "Bootstrap failed: 5: Input/output error" >&2; return 5; }
+      label=$(plutil -extract Label raw -o - "$plist")
+      if [ -f "$(jobs_dir)/$label" ]; then
+        echo "Bootstrap failed: 5: Input/output error" >&2; return 5
+      fi
+      write_job "$label" "$plist" "$(next_pid)" ;;
+    bootout)
+      label=$(label_of_target "${2-}")
+      [ -f "$(jobs_dir)/$label" ] || { echo "Boot-out failed: 3: No such process" >&2; return 3; }
+      local lag; lag=$(cat "$STUB_DIR/lag" 2>/dev/null || echo 0)
+      if [ "$lag" = 0 ]; then rm -f "$(jobs_dir)/$label"; else echo "$lag" >"$(jobs_dir)/$label.unloading"; fi ;;
+    kickstart)
+      shift; [ "${1-}" != -k ] || shift
+      label=$(label_of_target "${1-}")
+      [ -f "$(jobs_dir)/$label" ] || { echo "Could not find service \"$label\" in domain" >&2; return 113; }
+      write_job "$label" "$(job_value "$label" path)" "$(next_pid)" "$(job_value "$label" exit)" ;;
+    *) stub_unexpected "$@" ;;
+  esac
+}
+
+ctl() {
+  local arg pid='' code=''
+  case $1 in
+    loaded)
+      shift; local label=$1; shift
+      for arg in "$@"; do
+        case $arg in pid=*) pid=${arg#pid=} ;; exit=*) code=${arg#exit=} ;; *) echo "loaded: bad argument $arg" >&2; return 2 ;; esac
+      done
+      write_job "$label" "(not bootstrapped)" "$pid" "${code:-(never exited)}" ;;
+    unload-lag) echo "$2" >"$STUB_DIR/lag" ;;
+    loaded-labels)
+      local job
+      for job in "$(jobs_dir)"/*; do
+        [ -f "$job" ] || continue
+        case $job in *.unloading) ;; *) echo "${job##*/}" ;; esac
+      done ;;
+    *) echo "stub launchctl: unknown verb: $1" >&2; return 2 ;;
+  esac
+}
+
+stub_main launchctl "$@"

@@ -1,4 +1,8 @@
+# Play, record, convert, and stream select audio and video codecs
+brew "ffmpeg"
 # Command-line tools for fly.io services
 brew "flyctl"
 # Utility to upload MTG Arena data to 17Lands.com
 brew "rconroy293/seventeenlands/seventeenlands", trusted: true
+# Feature-rich command-line audio/video downloader
+brew "yt-dlp"

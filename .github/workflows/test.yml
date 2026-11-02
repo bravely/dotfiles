@@ -1,0 +1,50 @@
+# Run the bats tests under test/ on every pull request and every push to main.
+#
+# macOS, not Ubuntu: the scripts under test use plutil and the tests run macOS's
+# zsh, bash 3.2 and git. The job id `ci` is what gh-repo-profile requires by
+# default, so making this check required later is `gh-repo-profile REPO` with no
+# flags; test/repo.bats fails if the id and that default ever drift apart.
+#
+# The tests touch nothing outside their own temporary directories and need no
+# network and no secrets, so the workflow gets read-only permissions.
+
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      HOMEBREW_NO_ENV_HINTS: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      # jq ships with macOS 15 and later, but the runner image is not ours to
+      # pin, so install it rather than assume it.
+      - name: Install bats, chezmoi and jq
+        run: brew install bats-core chezmoi jq
+
+      - name: Show the tool versions
+        run: |
+          bats --version
+          chezmoi --version
+          jq --version
+          zsh --version
+          /bin/bash --version | head -1
+
+      - name: Run the tests
+        run: bats --print-output-on-failure --timing test/
