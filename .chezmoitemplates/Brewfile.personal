@@ -2,7 +2,11 @@
 brew "ffmpeg"
 # Command-line tools for fly.io services
 brew "flyctl"
+# Cross-platform library for audio I/O
+brew "portaudio"
 # Utility to upload MTG Arena data to 17Lands.com
 brew "rconroy293/seventeenlands/seventeenlands", trusted: true
+# Extremely fast Python package installer and resolver, written in Rust
+brew "uv"
 # Feature-rich command-line audio/video downloader
 brew "yt-dlp"
