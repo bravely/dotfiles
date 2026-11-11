@@ -34,6 +34,8 @@ brew "fd"
 brew "icu4c@78"
 # OpenType text shaping engine
 brew "harfbuzz"
+# Play, record, convert, and stream select audio and video codecs
+brew "ffmpeg"
 # Find files with SQL-like queries
 brew "fselect"
 # Command-line fuzzy finder written in Go
