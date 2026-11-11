@@ -67,13 +67,16 @@ In order. Each step depends on the ones before it.
    `~/.1password/agent.sock`.
 
 8. **Switch the dotfiles and jake-mode remotes to SSH** now that keys are available, and
-   log in to `gh`:
+   log in to `gh` over SSH:
 
    ```sh
    chezmoi git -- remote set-url origin git@github.com:bravely/dotfiles.git
    git -C ~/dev/jake-mode remote set-url origin git@github.com:bravely/jake-mode.git
-   gh auth login
+   gh auth login -p ssh
    ```
+
+   From then on, every `chezmoi apply` keeps gh's `git_protocol` on SSH
+   (`run_after_gh-git-protocol.sh`).
 
 9. **Grant permissions** when macOS asks: Karabiner-Elements needs Input Monitoring
    and its driver extension approved under Privacy & Security.

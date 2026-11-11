@@ -1,7 +1,8 @@
 #!/bin/bash
-# Stand-in for the GitHub CLI, for gh-repo-profile. It models the API calls the
-# script makes and answers them from a small route table, so a test states the
-# world in GitHub's own JSON and the stub applies --jq like the real gh does.
+# Stand-in for the GitHub CLI, for gh-repo-profile and run_after_gh-git-protocol.sh.
+# For gh-repo-profile it models the API calls the script makes and answers them
+# from a small route table, so a test states the world in GitHub's own JSON and
+# the stub applies --jq like the real gh does.
 #
 # Reads are served from "routes", keyed by the path after repos/OWNER/REPO/ (the
 # repo itself is `repo`). With no configuration every route answers for a healthy
@@ -13,6 +14,8 @@
 #   route KEY            stdin becomes the JSON (or raw file text) a GET of KEY returns
 #   route-fails KEY      a GET of KEY fails like a 404
 #   logged-out           `gh auth status` fails from now on
+#   protocol VALUE       `gh config get git_protocol` answers VALUE (default: https,
+#                        gh's own default); `gh config set git_protocol` changes it
 
 # shellcheck source=stub.sh
 . "${STUB_HOME:?stub run outside a test sandbox}/stub.sh"
@@ -67,6 +70,12 @@ behave() {
       [ ! -e "$STUB_DIR/logged-out" ] || { echo "You are not logged in" >&2; return 1; }
       echo "Logged in to github.com" ;;
     'repo edit') return 0 ;;
+    'config get')
+      [ "$#" -eq 3 ] && [ "$3" = git_protocol ] || stub_unexpected "$@"
+      cat "$STUB_DIR/git_protocol" 2>/dev/null || echo https ;;
+    'config set')
+      [ "$#" -eq 4 ] && [ "$3" = git_protocol ] || stub_unexpected "$@"
+      echo "$4" >"$STUB_DIR/git_protocol" ;;
     'api '*) shift; api "$@" ;;
     *) stub_unexpected "$@" ;;
   esac
@@ -77,6 +86,7 @@ ctl() {
     route)       mkdir -p "$STUB_DIR/routes"; cat >"$(route_file "$2")" ;;
     route-fails) mkdir -p "$STUB_DIR/routes"; : >"$(route_file "$2").fails" ;;
     logged-out)  : >"$STUB_DIR/logged-out" ;;
+    protocol)    echo "$2" >"$STUB_DIR/git_protocol" ;;
     *) echo "stub gh: unknown verb: $1" >&2; return 2 ;;
   esac
 }
