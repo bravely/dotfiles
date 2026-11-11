@@ -88,6 +88,8 @@ brew "pipx"
 brew "pkgconf"
 # Fast, disk space efficient package manager
 brew "pnpm", link: false
+# Cross-platform library for audio I/O
+brew "portaudio"
 # Unix pager optimized for psql
 brew "pspg"
 # Show ps output as a tree
@@ -114,6 +116,8 @@ brew "tig"
 brew "tmux"
 # Program that allows you to count code, quickly
 brew "tokei"
+# Extremely fast Python package installer and resolver, written in Rust
+brew "uv"
 # Cross-platform C++ GUI toolkit
 brew "wxwidgets"
 # Pluggable terminal workspace, with terminal multiplexer as the base feature
