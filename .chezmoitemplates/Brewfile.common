@@ -60,6 +60,8 @@ brew "unbound"
 brew "gnutls"
 # GNU Privacy Guard (OpenPGP)
 brew "gnupg"
+# CLI for Drive, Gmail, Calendar, Sheets, Docs, Chat, Admin, and more
+brew "googleworkspace-cli"
 # Gorgeous metric visualizations and dashboards for timeseries databases
 brew "grafana"
 # Command-line benchmarking tool
