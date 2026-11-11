@@ -3,7 +3,23 @@
     "BASH_ENV": "~/.claude/shell-env.sh"
   },
   "permissions": {
+    "allow": [
+      "Bash(git push *)"
+    ],
     "defaultMode": "auto"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'rex __internal session-start --agent claude 2>/dev/null || true'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
   },
   "statusLine": {
     "type": "command",
@@ -11,15 +27,22 @@
   },
   "enabledPlugins": {
     "mattpocock-skills@claude-plugins-official": true,
-    "pstack@cursor-plugins": true
+    "pstack@cursor-plugins": true,
+    "voicemode@voicemode": true
   },
   "extraKnownMarketplaces": {
     "cursor-plugins": {
       "source": {
-        "source": "git",
-        "url": "https://github.com/cursor/plugins.git"
+        "source": "github",
+        "repo": "cursor/plugins"
       },
       "autoUpdate": true
+    },
+    "voicemode": {
+      "source": {
+        "source": "github",
+        "repo": "mbailey/voicemode"
+      }
     }
   },
   "tui": "fullscreen",
