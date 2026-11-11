@@ -1,12 +1,8 @@
 #!/bin/bash
 # Stand-in for the claude CLI. claude-rc only asks it whether this Mac is logged in
 # (`claude auth status`); the servers it installs would run `claude remote-control`,
-# but the stubbed launchctl never starts them. run_after_claude-marketplaces.sh
-# re-registers marketplaces with `claude plugin ...`: those calls succeed, and
-# `plugin install` rewrites ~/.claude/settings.json the way the real CLI does
-# (dropping autoUpdate), so a test can see whether the script puts the file back.
-# This file is also what $HOME/.local/bin/claude points at, so "claude is
-# installed" is a real executable.
+# but the stubbed launchctl never starts them. This file is also what
+# $HOME/.local/bin/claude points at, so "claude is installed" is a real executable.
 #
 # Verbs for tests:
 #   logged-out    `claude auth status` fails from now on
@@ -19,11 +15,6 @@ behave() {
     'auth status')
       [ ! -e "$STUB_DIR/logged-out" ] || { echo "Not logged in" >&2; return 1; }
       echo "Logged in" ;;
-    'plugin marketplace') ;;
-    'plugin install')
-      local settings=$HOME/.claude/settings.json
-      jq 'del(.extraKnownMarketplaces[]?.autoUpdate)' "$settings" >"$settings.stub" &&
-        mv "$settings.stub" "$settings" ;;
     *) stub_unexpected "$@" ;;
   esac
 }
