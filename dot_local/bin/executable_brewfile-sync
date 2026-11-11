@@ -30,7 +30,8 @@ chezmoi source directory. Reports:
              the machine) but not installed. Either install them or drop them.
 
 Taps are left out of "New" when an entry in the lists already names the tap in
-full (e.g. brew "owner/tap/formula"), since that entry taps it on its own.
+full (e.g. brew "owner/tap/formula"), since that entry taps it on its own. Go's bundled tools (go "cmd/...") are left out too,
+since go install refuses them.
 EOF
 }
 
@@ -79,6 +80,8 @@ local -a new missing
 for key in ${(ko)installed}; do
   (( $+listed[$key] )) && continue
   [[ $key == tap\ * ]] && tap_implied ${${key#tap \"}%\"} && continue
+  # The dump lists Go's bundled tools, but `go install` refuses them.
+  [[ $key == 'go "cmd/'* ]] && continue
   new+=$key
 done
 for key in ${(ko)wanted}; do

@@ -125,6 +125,17 @@ DUMP
   [[ $output == *"New: none"* ]] || false
 }
 
+@test "New: Go's own cmd/ tools are left out, since go install refuses them" {
+  lists 'go "golang.org/x/tools/gopls"' '' ''
+  installed <<'DUMP'
+go "cmd/go"
+go "cmd/gofmt"
+go "golang.org/x/tools/gopls"
+DUMP
+  run brewfile-sync
+  [[ $output == *"New: none"* ]] || false
+}
+
 @test "New: a tap no listed entry names is shown" {
   lists 'brew "jq"' '' ''
   installed <<'DUMP'

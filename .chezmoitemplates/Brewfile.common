@@ -175,8 +175,6 @@ cask "zed"
 mas "Kindle", id: 302584613
 mas "Magnet", id: 441258766
 vscode "anthropic.claude-code"
-go "cmd/go"
-go "cmd/gofmt"
 go "golang.org/x/tools/cmd/goimports"
 go "github.com/golangci/golangci-lint/cmd/golangci-lint"
 go "golang.org/x/tools/gopls"
