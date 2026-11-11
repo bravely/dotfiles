@@ -120,6 +120,13 @@ The same goes for Claude Code: `/plugin`, `/config` and `/model` write to the li
 `~/.claude/settings.json`. To keep a plugin or setting on every machine, run
 `chezmoi re-add ~/.claude/settings.json` and commit; otherwise the next apply reverts it.
 
+Claude Code ignores a declared marketplace, and stops loading every plugin from it, when
+it was registered from a different source than settings.json declares, even another
+spelling of the same repo (a git URL for a GitHub `owner/repo`). `chezmoi apply` checks
+for that and, for any marketplace that has drifted, removes it, re-adds it from the
+declared source, and reinstalls its enabled plugins. Declare marketplaces as
+`"source": "github"` with `"repo"`: that is the form the CLI writes itself.
+
 `chezmoi apply` also keeps jake-mode current: at most once an hour it runs
 `git pull --ff-only` in `~/dev/jake-mode`, then relinks its skills and rules, pruning links
 to any that were removed. If that checkout has diverged from `origin`, is on a branch with
