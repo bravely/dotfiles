@@ -120,6 +120,20 @@ The same goes for Claude Code: `/plugin`, `/config` and `/model` write to the li
 `~/.claude/settings.json`. To keep a plugin or setting on every machine, run
 `chezmoi re-add ~/.claude/settings.json` and commit; otherwise the next apply reverts it.
 
+Claude Code ignores a declared marketplace, and stops loading every plugin from it, when
+it was registered from a different source than settings.json declares, even another
+spelling of the same repo (a git URL for a GitHub `owner/repo`). `claude plugin list`
+then shows the plugin as "failed to load" with "added but ignored". To avoid it, declare
+marketplaces as `"source": "github"` with `"repo"`, the form the CLI writes itself, and
+add them with `/plugin marketplace add owner/repo`, never a URL. Don't edit the
+declaration to match a stray registration; re-register instead:
+
+```sh
+claude plugin marketplace remove cursor-plugins   # also uninstalls its plugins
+claude plugin marketplace add cursor/plugins
+claude plugin install pstack@cursor-plugins
+```
+
 `chezmoi apply` also keeps jake-mode current: at most once an hour it runs
 `git pull --ff-only` in `~/dev/jake-mode`, then relinks its skills and rules, pruning links
 to any that were removed. If that checkout has diverged from `origin`, is on a branch with
