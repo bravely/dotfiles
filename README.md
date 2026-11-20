@@ -101,6 +101,14 @@ In order. Each step depends on the ones before it.
     `~/dev/jake-mode`. If one is missing, jake-mode's `wire-skills` skill has the
     troubleshooting order.
 
+    Claude sessions in this repo also get `~/dev/jake-mode` as an additional working
+    directory, from `.claude/settings.json`, so a change that spans both repos needs
+    no `/add-dir`. The path is written from `~` rather than as `../jake-mode` because
+    relative entries resolve against the session's directory, and a session in a
+    worktree under `.claude/worktrees/` would miss it. The entry grants file access
+    only; it doesn't load jake-mode's CLAUDE.md. chezmoi skips the repo's `.claude/`,
+    so none of it is installed into `~/.claude`.
+
 Not covered here: mise's own tool config (`~/.config/mise/config.toml`) isn't in this
 repo, so install runtimes with `mise use -g` as you need them.
 
