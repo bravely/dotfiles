@@ -190,10 +190,12 @@ rerunning it after the script changes picks the change up. Everything exits 1
 when it couldn't do what was asked, so another session can rely on the status. Each remote session gets its own worktree
 (`--spawn=worktree`) and runs in auto permission mode. The servers use whichever
 Claude account this Mac is logged in to, so a work machine serves the work account.
-Logs are in `~/Library/Logs/claude-rc-<path>.log`.
+Logs are in `~/Library/Logs/claude-rc-<path>.log`. The servers run the native
+installer's `~/.local/bin/claude` when it exists, and otherwise whichever `claude` is
+on PATH, such as Homebrew's `/opt/homebrew/bin/claude`.
 
-`ensure` also installs one updater agent per machine. It watches
-`~/.local/bin/claude` and runs `claude-rc restart --all` when it changes, because
+`ensure` also installs one updater agent per machine. It watches that same claude
+path and runs `claude-rc restart --all` when it changes, because
 Claude's updater prunes old versions, and a server still running a pruned version
 reports Ready while every session it starts fails.
 

@@ -19,6 +19,9 @@ typeset -r DOMAIN="gui/$(id -u)"
 typeset -r UPDATER_LABEL='com.bravely.claude-rc-updater'
 typeset -r UPDATER_PLIST="$AGENTS_DIR/$UPDATER_LABEL.plist"
 typeset -r UPDATER_PROGRAM="$HOME/.local/bin/claude-rc"
+# launchd starts agents with only /usr/bin:/bin:/usr/sbin:/sbin, which has neither
+# a Homebrew claude nor jq, so every agent gets this PATH.
+typeset -r AGENT_PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 info() { print -r -- "$PROGRAM: $*" }
 warn() { print -u2 -r -- "$PROGRAM: warning: $*" }
@@ -49,7 +52,7 @@ checkout; a submodule is served as itself.
 Servers run 'claude remote-control --spawn=worktree --permission-mode auto', so
 each remote session gets its own worktree. Logs go to $LOGS_DIR.
 ensure also installs one updater agent per machine, which runs 'restart --all'
-whenever ~/.local/bin/claude changes: a server left on a version the updater has
+whenever the claude binary changes: a server left on a version the updater has
 pruned still reports Ready, but every session it starts fails.
 
 A server can't answer prompts, so ensure refuses until both one-time prompts are
@@ -176,7 +179,7 @@ server_plist() {
   <string>$label</string>
   <key>ProgramArguments</key>
   <array>
-    <string>$(xml "$HOME")/.local/bin/claude</string>
+    <string>$(xml "$CLAUDE_BIN")</string>
     <string>remote-control</string>
     <string>--spawn=worktree</string>
     <string>--permission-mode</string>
@@ -190,7 +193,7 @@ server_plist() {
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
-    <string>$(xml "$HOME")/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <string>$(xml "$AGENT_PATH")</string>
   </dict>
   <key>RunAtLoad</key>
   <true/>
@@ -223,8 +226,13 @@ updater_plist() {
   </array>
   <key>WatchPaths</key>
   <array>
-    <string>$(xml "$HOME")/.local/bin/claude</string>
+    <string>$(xml "$CLAUDE_BIN")</string>
   </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>$(xml "$AGENT_PATH")</string>
+  </dict>
   <key>StandardOutPath</key>
   <string>$(xml "$LOGS_DIR")/claude-rc-updater.log</string>
   <key>StandardErrorPath</key>
@@ -385,7 +393,16 @@ cmd_remove() {
 }
 
 (( $+commands[jq] )) || die 'jq is not installed (brew install jq)'
-[[ -x $HOME/.local/bin/claude ]] || die "claude not found at $HOME/.local/bin/claude"
+# The native installer's ~/.local/bin/claude, else whichever claude is on PATH
+# (Homebrew's /opt/homebrew/bin/claude). Agents run this path, not what it links
+# to, so an update that repoints it is picked up on restart.
+if [[ -x $HOME/.local/bin/claude ]]; then
+  typeset -r CLAUDE_BIN=$HOME/.local/bin/claude
+elif (( $+commands[claude] )); then
+  typeset -r CLAUDE_BIN=${commands[claude]}
+else
+  die "claude not found at $HOME/.local/bin/claude or on PATH"
+fi
 
 case ${1-} in
   ensure|remove|restart)
