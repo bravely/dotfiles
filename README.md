@@ -101,6 +101,14 @@ In order. Each step depends on the ones before it.
     `~/dev/jake-mode`. If one is missing, jake-mode's `wire-skills` skill has the
     troubleshooting order.
 
+    Claude sessions in this repo also get `~/dev/jake-mode` as an additional working
+    directory, from `.claude/settings.json`, so a change that spans both repos needs
+    no `/add-dir`. The path is written from `~` rather than as `../jake-mode` because
+    relative entries resolve against the session's directory, and a session in a
+    worktree under `.claude/worktrees/` would miss it. The entry grants file access
+    only; it doesn't load jake-mode's CLAUDE.md. chezmoi skips the repo's `.claude/`,
+    so none of it is installed into `~/.claude`.
+
 Not covered here: mise's own tool config (`~/.config/mise/config.toml`) isn't in this
 repo, so install runtimes with `mise use -g` as you need them.
 
@@ -190,10 +198,12 @@ rerunning it after the script changes picks the change up. Everything exits 1
 when it couldn't do what was asked, so another session can rely on the status. Each remote session gets its own worktree
 (`--spawn=worktree`) and runs in auto permission mode. The servers use whichever
 Claude account this Mac is logged in to, so a work machine serves the work account.
-Logs are in `~/Library/Logs/claude-rc-<path>.log`.
+Logs are in `~/Library/Logs/claude-rc-<path>.log`. The servers run the native
+installer's `~/.local/bin/claude` when it exists, and otherwise whichever `claude` is
+on PATH, such as Homebrew's `/opt/homebrew/bin/claude`.
 
-`ensure` also installs one updater agent per machine. It watches
-`~/.local/bin/claude` and runs `claude-rc restart --all` when it changes, because
+`ensure` also installs one updater agent per machine. It watches that same claude
+path and runs `claude-rc restart --all` when it changes, because
 Claude's updater prunes old versions, and a server still running a pruned version
 reports Ready while every session it starts fails.
 

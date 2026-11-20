@@ -107,11 +107,36 @@ plist_field() { plutil -extract "$2" raw -o - "$1"; }
   [[ $output == *"jq is not installed"* ]] || false
 }
 
-@test "refuses when claude is not installed in ~/.local/bin" {
+@test "refuses when claude is neither in ~/.local/bin nor on PATH" {
   rm "$HOME/.local/bin/claude"
+  hide claude
   run claude-rc status
   [ "$status" -eq 1 ]
-  [[ $output == *"claude not found at $HOME/.local/bin/claude"* ]] || false
+  [[ $output == *"claude not found at $HOME/.local/bin/claude or on PATH"* ]] || false
+}
+
+@test "without ~/.local/bin/claude, the server and updater use the claude on PATH" {
+  # As Homebrew installs it: only in a directory on PATH.
+  claude=$HOME/brew/bin/claude
+  mkdir -p "${claude%/*}"
+  mv "$HOME/.local/bin/claude" "$claude"
+  SANDBOX_PATH=${claude%/*}:$SANDBOX_PATH
+  serve dotfiles >/dev/null
+  [ "$(plutil -extract ProgramArguments json -o - "$(agents)/$(label_for dotfiles).plist" | jq -r '.[0]')" = "$claude" ]
+  [ "$(plutil -extract WatchPaths json -o - "$(agents)/$UPDATER.plist" | jq -r '.[]')" = "$claude" ]
+}
+
+@test "the native install in ~/.local/bin wins over a claude earlier on PATH" {
+  mkdir -p "$HOME/brew/bin"
+  cp "$HOME/.local/bin/claude" "$HOME/brew/bin/claude"
+  SANDBOX_PATH=$HOME/brew/bin:$SANDBOX_PATH
+  serve dotfiles >/dev/null
+  [ "$(plutil -extract ProgramArguments json -o - "$(agents)/$(label_for dotfiles).plist" | jq -r '.[0]')" = "$HOME/.local/bin/claude" ]
+}
+
+@test "the updater gets a PATH with Homebrew on it, since launchd's default has none" {
+  serve dotfiles >/dev/null
+  [[ $(plist_field "$(agents)/$UPDATER.plist" EnvironmentVariables.PATH) == *:/opt/homebrew/bin:* ]] || false
 }
 
 @test "a plain checkout is served as itself" {
@@ -279,7 +304,7 @@ nothing_installed() {
   [[ $(stub launchctl loaded-labels) == *"$UPDATER"* ]] || false
 }
 
-@test "the updater runs restart --all whenever ~/.local/bin/claude changes" {
+@test "the updater runs restart --all whenever the claude binary changes" {
   serve dotfiles >/dev/null
   plist=$(agents)/$UPDATER.plist
   [ "$(plutil -extract ProgramArguments json -o - "$plist" | jq -r 'join(" ")')" = "$HOME/.local/bin/claude-rc restart --all" ]
