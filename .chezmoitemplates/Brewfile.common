@@ -74,6 +74,8 @@ brew "hyperfine"
 brew "icu4c@77"
 # Manage your Java environment
 brew "jenv"
+# Git-compatible distributed version control system
+brew "jj"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
 # Modern load testing tool, using Go and JavaScript
