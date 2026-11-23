@@ -1,0 +1,24 @@
+#!/bin/bash
+# Stand-in for the Todoist CLI, for run_after_td-claude-skill.sh. The one call
+# modelled is installing its Claude Code skill, which behaves as the real td
+# does: it needs ~/.claude to exist and refuses to overwrite a skill already
+# there. Anything else is an unexpected call.
+
+# shellcheck source=stub.sh
+. "${STUB_HOME:?stub run outside a test sandbox}/stub.sh"
+
+behave() {
+  local skill=$HOME/.claude/skills/todoist-cli/SKILL.md
+  case "$*" in
+    'skill install claude-code')
+      [ -d "$HOME/.claude" ] ||
+        { echo "claude-code does not appear to be installed ($HOME/.claude not found)" >&2; return 1; }
+      [ ! -e "$skill" ] ||
+        { echo "Skill file already exists at $skill. Use --force to overwrite." >&2; return 1; }
+      mkdir -p "${skill%/*}"
+      echo 'the todoist-cli skill' >"$skill" ;;
+    *) stub_unexpected "$@" ;;
+  esac
+}
+
+stub_main td "$@"
