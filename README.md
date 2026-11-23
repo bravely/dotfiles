@@ -101,6 +101,11 @@ In order. Each step depends on the ones before it.
     `~/dev/jake-mode`. If one is missing, jake-mode's `wire-skills` skill has the
     troubleshooting order.
 
+    One entry there is a real directory, not a link: `todoist-cli`, the Todoist
+    CLI's own skill for driving `td`. Every `chezmoi apply` installs it once `td` is
+    on `PATH` (`run_after_td-claude-skill.sh`), and `td` rewrites it after its own
+    upgrades. jake-mode's `todoist-access` rule says when a session uses it.
+
     Claude sessions in this repo also get `~/dev/jake-mode` as an additional working
     directory, from `.claude/settings.json`, so a change that spans both repos needs
     no `/add-dir`. The path is written from `~` rather than as `../jake-mode` because
