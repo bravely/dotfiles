@@ -164,6 +164,8 @@ cask "loom"
 cask "meetingbar"
 # Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
+# Record your screen, voice and drawings into compact bundles for coding agents
+cask "kitlangton/tap/scrawl", trusted: true
 # Team communication and collaboration software
 cask "slack"
 # Sound and audio controller
@@ -190,5 +192,6 @@ go "github.com/golangci/golangci-lint/cmd/golangci-lint"
 go "golang.org/x/tools/gopls"
 uv "voice-mode"
 npm "@doist/todoist-cli"
+npm "@oxide/skepsis"
 npm "@withgraphite/graphite-cli"
 npm "corepack"
