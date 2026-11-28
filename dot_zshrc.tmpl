@@ -195,13 +195,6 @@ esac
 export SSH_AUTH_SOCK=~/.1password/agent.sock
 # export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
 
-# bun completions
-[ -s "/Users/{{- .chezmoi.username -}}/.bun/_bun" ] && source "/Users/{{- .chezmoi.username -}}/.bun/_bun"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
 eval "$(atuin init zsh)"
 
 # jj's dynamic completions: jj itself answers each completion, so bookmarks,
