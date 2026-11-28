@@ -52,8 +52,6 @@ brew "gcc"
 brew "gh"
 # Distributed revision control system
 brew "git"
-# High-velocity, monorepo-scale workflow for Git
-brew "git-branchless"
 # Syntax-highlighting pager for git and diff output
 brew "git-delta"
 # Blazing fast terminal-ui for git written in rust
