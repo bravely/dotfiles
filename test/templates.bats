@@ -105,6 +105,13 @@ entries() { grep -hE '^[a-z]+ "' "$@" | sort -u; }
   [[ $output == *'/Users/alice/.bun/_bun'* ]] || false
 }
 
+@test "zshrc: git runs as itself, not through a wrapper alias" {
+  chezmoi_config
+  run render dot_zshrc.tmpl
+  [ "$status" -eq 0 ]
+  ! grep -qE "^[[:space:]]*alias git=" <<<"$output" || false
+}
+
 @test "zshrc: a mac gets nothing meant for Linux" {
   chezmoi_config
   run render dot_zshrc.tmpl
