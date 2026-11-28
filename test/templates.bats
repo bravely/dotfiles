@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 #
 # Tests for the chezmoi templates: .chezmoi.toml.tmpl, Brewfile.tmpl, dot_gitconfig.tmpl,
-# dot_config/git/allowed_signers.tmpl, dot_config/starship.toml.tmpl, dot_zshrc.tmpl and
+# dot_config/git/allowed_signers.tmpl, dot_config/jj/config.toml.tmpl, dot_config/starship.toml.tmpl, dot_zshrc.tmpl and
 # run_after_link-jake-mode.sh.tmpl. The real chezmoi renders them from this repo,
 # for a work and a personal answer, inside the sandbox: its config, state and
 # destination are all under the test's fake HOME, and externals and scripts never run
@@ -89,6 +89,17 @@ entries() { grep -hE '^[a-z]+ "' "$@" | sort -u; }
   [ "$(grep -v '^#' <<<"$output" | awk '{print $1, $2, $3}')" = 'jake@work.test namespaces="git" ssh-ed25519' ]
 }
 
+@test "jj config: parses as TOML and carries the machine's email and Jake's name, for both answers" {
+  for machine in work personal; do
+    chezmoi_config machineType=$machine email="jake@$machine.test"
+    render dot_config/jj/config.toml.tmpl >"$HOME/rendered.jj.toml"
+    run in_sandbox chezmoi execute-template \
+      '{{ $c := include (joinPath .chezmoi.homeDir "rendered.jj.toml") | fromToml }}{{ $c.user.name }} <{{ $c.user.email }}>'
+    [ "$status" -eq 0 ]
+    [ "$output" = "Jake Demarest-Mays <jake@$machine.test>" ]
+  done
+}
+
 @test "zshrc: renders to valid zsh, for both answers" {
   for machine in work personal; do
     chezmoi_config machineType=$machine
@@ -158,7 +169,7 @@ $HOME/.claude/rules" ]
   init_machine jake@work.test work
   run chezmoi_apply
   [ "$status" -eq 0 ]
-  for target in .zshrc .gitconfig Brewfile .config/git/allowed_signers .config/starship.toml; do
+  for target in .zshrc .gitconfig Brewfile .config/git/allowed_signers .config/jj/config.toml .config/starship.toml; do
     [ -s "$HOME/$target" ]
   done
   [ -x "$HOME/.local/bin/claude-rc" ]
