@@ -20,7 +20,7 @@
 #   1. Scripts run under `env -i`, so they inherit nothing: HOME is a copy of a golden
 #      home inside the test's own tmpdir, PATH names only two directories.
 #   2. That PATH holds symlinks to a short list of real tools (setup_suite.bash) and
-#      to the stubs. launchctl, gh, brew and claude are stubs; the real ones are on
+#      to the stubs. launchctl, gh, brew, claude and curl are stubs; the real ones are on
 #      no directory a script can see. A tool nobody listed does not exist.
 #   3. setup_suite.bash gives the whole run a throwaway HOME before any test starts,
 #      so a test file that forgets all of this still cannot reach the real one.
@@ -36,7 +36,7 @@ REPO_ROOT=$(cd "$BATS_TEST_DIRNAME/.." && pwd -P)
 # does not exist for them: a script that starts using a new tool fails the suite
 # until the tool is added here, on purpose.
 suite_real_tools=(
-  awk bash cat chezmoi cmp cut env git grep head id jq mkdir mv plutil rm sed sh shasum tr zsh
+  awk bash cat chezmoi cmp cut env git grep head id jq mkdir mktemp mv plutil rm sed sh shasum tr unzip zsh
 )
 
 setup()    { sandbox_init; }
