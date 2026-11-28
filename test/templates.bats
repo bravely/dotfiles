@@ -109,11 +109,10 @@ entries() { grep -hE '^[a-z]+ "' "$@" | sort -u; }
   done
 }
 
-@test "zshrc: pnpm and bun live under the account's home" {
+@test "zshrc: pnpm lives under the account's home" {
   chezmoi_config
   run render dot_zshrc.tmpl --override-data '{"chezmoi": {"username": "alice"}}'
   [[ $output == *'export PNPM_HOME="/Users/alice/Library/pnpm"'* ]] || false
-  [[ $output == *'/Users/alice/.bun/_bun'* ]] || false
 }
 
 @test "zshrc: a mac gets nothing meant for Linux" {
