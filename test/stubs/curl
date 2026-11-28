@@ -1,0 +1,35 @@
+#!/bin/bash
+# Stand-in for curl, for scripts that download a release file. The one call
+# modelled is a fail-on-error download to a file, `curl -fsSL -o OUT URL`. A URL
+# a test has served gets that file's bytes; any other URL fails as the real curl
+# -f does on a 404. Anything else is an unexpected call.
+#
+# Verbs for tests:
+#   serve URL FILE   downloads of URL get a copy of FILE from now on
+
+# shellcheck source=stub.sh
+. "${STUB_HOME:?stub run outside a test sandbox}/stub.sh"
+
+# Where the bytes served for a URL are kept: named by the URL's hash.
+served() { printf '%s/served/%s' "$STUB_DIR" "$(printf %s "$1" | shasum | cut -d' ' -f1)"; }
+
+behave() {
+  [ $# -eq 4 ] && [ "$1" = -fsSL ] && [ "$2" = -o ] || stub_unexpected "$@"
+  local out=$3 url=$4 file
+  file=$(served "$url")
+  [ -f "$file" ] || { echo "curl: (22) The requested URL returned error: 404" >&2; return 22; }
+  cat "$file" >"$out"
+}
+
+ctl() {
+  case $1 in
+    serve)
+      local file
+      file=$(served "${2:?serve needs a URL}")
+      mkdir -p "${file%/*}"
+      cat "${3:?serve needs a file}" >"$file" ;;
+    *) echo "stub curl: unknown verb: $1" >&2; return 2 ;;
+  esac
+}
+
+stub_main curl "$@"

@@ -47,8 +47,8 @@ resolve() {
 $SUITE_HOME/.local/bin/claude-rc:0" ]
 }
 
-@test "launchctl, gh, brew, claude, starship and sleep resolve to stubs and to nothing else" {
-  for tool in launchctl gh brew claude starship sleep; do
+@test "launchctl, gh, brew, claude, starship, sleep and curl resolve to stubs and to nothing else" {
+  for tool in launchctl gh brew claude starship sleep curl; do
     run in_sandbox sh -c 'IFS=:; for dir in $PATH; do [ -e "$dir/'$tool'" ] && echo "$dir/'$tool'"; done'
     [ "$status" -eq 0 ]
     [ -n "$output" ]
@@ -58,8 +58,8 @@ $SUITE_HOME/.local/bin/claude-rc:0" ]
   done
 }
 
-@test "a tool nobody listed does not exist: no curl, ssh, osascript or open" {
-  for tool in curl wget ssh nc osascript open; do
+@test "a tool nobody listed does not exist: no wget, ssh, osascript or open" {
+  for tool in wget ssh nc osascript open; do
     run in_sandbox sh -c "command -v $tool"
     [ "$status" -ne 0 ]
   done
