@@ -204,6 +204,12 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 eval "$(atuin init zsh)"
 
+# jj's dynamic completions: jj itself answers each completion, so bookmarks,
+# revisions, aliases and operations complete from the repo you're in. The
+# script calls compdef, so it must come after oh-my-zsh has run compinit.
+# https://docs.jj-vcs.dev/latest/install-and-setup/#dynamic-completions
+command -v jj >/dev/null && source <(COMPLETE=zsh jj)
+
 # mise is activated by the oh-my-zsh `mise` plugin (in $plugins above), which
 # runs `mise activate zsh` when oh-my-zsh is sourced. No second activation here.
 # Non-interactive shells never reach this file at all — ~/.zshenv puts mise's

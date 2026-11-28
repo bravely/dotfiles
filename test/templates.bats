@@ -122,6 +122,15 @@ entries() { grep -hE '^[a-z]+ "' "$@" | sort -u; }
   [[ $output != *linuxbrew* ]] || false
 }
 
+@test "zshrc: jj's dynamic completions load after oh-my-zsh has run compinit" {
+  chezmoi_config
+  render dot_zshrc.tmpl >"$HOME/rendered.zshrc"
+  compinit_line=$(grep -n 'source $ZSH/oh-my-zsh.sh' "$HOME/rendered.zshrc" | cut -d: -f1)
+  jj_line=$(grep -n 'source <(COMPLETE=zsh jj)' "$HOME/rendered.zshrc" | cut -d: -f1)
+  [ -n "$jj_line" ]
+  [ "$jj_line" -gt "$compinit_line" ]
+}
+
 @test "starship config: a mac gets the Rosetta indicator and Linux does not" {
   chezmoi_config
   run render dot_config/starship.toml.tmpl
